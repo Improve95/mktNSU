@@ -1,12 +1,39 @@
 import string;
 import math/math;
+import ds/tree;
+import lingo/pegcode/driver;
+import fs/filesystem;
+
+export {
+  ArExpr ::= ArInt;
+    ArInt(val : int);
+
+  ar2s(e : ArExpr) -> string {
+    switch (e) {
+      ArInt(val): i2s(val);
+    }
+  }
+
+  ar2i(e : ArExpr) -> int {
+    switch (e) {
+      ArInt(val): val;
+    }
+  }
+
+  s2ar(str : string) -> ArExpr {
+    parsic(
+      compilePegGrammar("#include exprParser.lingo"),
+      str, 
+      SemanticActions(setTree(defaultPegActions.t, "createArInt", \s -> ArInt(s2i(s[0]))))
+    )
+  }
+}
 
 main() {
-  as : [string] = ["43", "23"];
+  expr = "5";
 
-  ai = fold(as, [], \a, el -> arrayPush(a, s2i(el)));
-
-  println(ai);
+  res : ArExpr = s2ar(expr);
+  // println(res);
 
   quit(0);
 }

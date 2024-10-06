@@ -6,17 +6,12 @@ import arith;
 
 main() {
   expr = getUrlParameter("expr");
-  usage : string = "Usage: calculator.flow -- \"expr=<expression>\" ...";
-  if (expr == "") {
-    println("Expression expected");
-    println(usage);
-    quit(-1);
-  } else {
+ 
     println("Expression: " + expr);
     e : ArExpr = s2ar(expr);
     println(e);
     println(ar2s(e) + " = " + i2s(ar2i(e)));
 
     quit(0);
-  }
+  
 }

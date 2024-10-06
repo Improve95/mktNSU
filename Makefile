@@ -8,5 +8,5 @@ c5:
 	../bin/flowc1 lab5/src/lab5.flow jar=lab I=lab5/src
 	
 run:
-	java -jar lab.jar expr="5+5*2"
+	java -jar lab.jar
 
