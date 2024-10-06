@@ -7,29 +7,26 @@ import fs/filesystem;
 export {
   Expr ::= Sum, Mul, Int;
     Int(val : int);
-    Sum(lhs : Expr, rhs : Expr);
-    Mul(lhs : Expr, rhs : Expr);
+    Sum(i1 : Expr, i2 : Expr);
+    Mul(i1 : Expr, i2 : Expr);
 
   ar2i(e : Expr) -> int {
     switch (e) {
       Int(val): val;
-      Sum(lhs, rhs): ar2i(lhs) + ar2i(rhs);
-      Mul(lhs, rhs): ar2i(lhs) * ar2i(rhs);
+      Sum(i1, i2): ar2i(i1) + ar2i(i2);
+      Mul(i1, i2): ar2i(i1) * ar2i(i2);
     }
   }
 
-  calculate(str : string) -> int {
-    expr = parsic(
-      compilePegGrammar("#include exprParser.lingo"),
-      str, 
-      SemanticActions(setTree(defaultPegActions.t, "createInt", \s -> Int(s2i(s[0]))))
-    );
+  calculate(s : string) -> int {
+	  t = setTree(defaultPegActions.t, "calculate", \as -> Int(s2i(as[0])));
+    expr = parsic(compilePegGrammar("#include exprParser.lingo"), s, SemanticActions(t));
     ar2i(expr)
   }
 }
 
 main() {
-  expr = "5+5";
+  expr = "2*(5+5)";
   println(calculate(expr));
 
   quit(0);
