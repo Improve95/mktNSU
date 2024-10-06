@@ -1,11 +1,12 @@
-detete-jar:
+dJar:
 	rm lab.jar
 
-c4: detete-jar
+c4: 
 	../bin/flowc1 lab4v2.flow jar=lab
 
-c5: detete-jar
+c5:
+	../bin/flowc1 lab5/src/lab5.flow jar=lab I=lab5/src
 	
 run:
-	java -jar lab.jar
+	java -jar lab.jar expr="5+5*2"
 
