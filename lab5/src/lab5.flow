@@ -1,22 +1,39 @@
 import string;
 import math/math;
 import ds/tree;
+import lingo/pegcode/driver;
+import fs/filesystem;
 
-import arith;
+export {
+  ArExpr ::= ArInt;
+    ArInt(val : int);
+
+  ar2s(e : ArExpr) -> string {
+    switch (e) {
+      ArInt(val): i2s(val);
+    }
+  }
+
+  ar2i(e : ArExpr) -> int {
+    switch (e) {
+      ArInt(val): val;
+    }
+  }
+
+  s2ar(str : string) -> ArExpr {
+    parsic(
+      compilePegGrammar("#include exprParser.lingo"),
+      str, 
+      SemanticActions(setTree(defaultPegActions.t, "createArInt", \s -> ArInt(s2i(s[0]))))
+    )
+  }
+}
 
 main() {
-  expr = getUrlParameter("expr");
-  usage : string = "Usage: calculator.flow -- \"expr=<expression>\" ...";
-  if (expr == "") {
-    println("Expression expected");
-    println(usage);
-    quit(-1);
-  } else {
-    println("Expression: " + expr);
-    e : ArExpr = s2ar(expr);
-    println(e);
-    println(ar2s(e) + " = " + i2s(ar2i(e)));
+  expr = "5";
 
-    quit(0);
-  }
+  res : ArExpr = s2ar(expr);
+  // println(res);
+
+  quit(0);
 }

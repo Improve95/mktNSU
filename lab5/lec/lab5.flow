@@ -24,4 +24,4 @@ Expr ::= IntConst, Mul, Sum;
 
 IntConst(value:int);
 Mul(left: Expr, right: Expr);
-Sum(left: Expr, right: Expr)
+Sum(left: Expr, right: Expr);
