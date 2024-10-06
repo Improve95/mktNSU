@@ -5,26 +5,26 @@ import lingo/pegcode/driver;
 import fs/filesystem;
 
 export {
-  ArExpr ::= ArSum, ArMult, ArInt;
-    ArSum(lhs : ArExpr, rhs : ArExpr);
-    ArMult(lhs : ArExpr, rhs : ArExpr);
-    ArInt(val : int);
+  Expr ::= Sum, Mul, Int;
+    Int(val : int);
+    Sum(lhs : Expr, rhs : Expr);
+    Mul(lhs : Expr, rhs : Expr);
 
-  ar2i(e : ArExpr) -> int {
+  ar2i(e : Expr) -> int {
     switch (e) {
-      ArSum(lhs, rhs): ar2i(lhs) + ar2i(rhs);
-      ArMult(lhs, rhs): ar2i(lhs) * ar2i(rhs);
-      ArInt(val): val;
+      Int(val): val;
+      Sum(lhs, rhs): ar2i(lhs) + ar2i(rhs);
+      Mul(lhs, rhs): ar2i(lhs) * ar2i(rhs);
     }
   }
 
   calculate(str : string) -> int {
-    arExpr = parsic(
+    expr = parsic(
       compilePegGrammar("#include exprParser.lingo"),
       str, 
-      SemanticActions(setTree(defaultPegActions.t, "createArInt", \s -> ArInt(s2i(s[0]))))
+      SemanticActions(setTree(defaultPegActions.t, "createInt", \s -> Int(s2i(s[0]))))
     );
-    ar2i(arExpr)
+    ar2i(expr)
   }
 }
 
