@@ -1,0 +1,19 @@
+import runtime;
+import ds/tree;
+import ds/array;
+
+Inds2(a : [int], m : int) -> [Pair<int, int>] {
+    tree : Tree = foldi(a, makeTree(), \i, t, value -> treePushToArrayValue(t, value, i));
+
+    foldi(a, [], \i, pairs, a_i ->
+        concat(pairs, map(getTreeArrayValue(tree, m - a_i), \x -> Pair(x, i)))
+    );
+}
+
+
+main() {
+    m : int = 13;
+    a : [int] = [-1, 0, 2, 7, 0, 15, 5, -7, 3, 4, 12, -8, 6, 43, 3, -7];
+    println(Inds2(a, m));
+    quit(0);
+}

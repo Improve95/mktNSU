@@ -1,0 +1,48 @@
+import string;
+
+fib(n : int) -> [int] {
+    if (n == 0) {
+        [];
+    } else if (n == 1) {
+        [0, 1];
+    } else {
+        r  = fib(n - 1);
+        arrayPush(r, r[n - 2] + r[n - 1]);
+    }
+}
+
+fib2(n : int) -> [int] {
+    fibR(n + 1, 0, []);
+}
+
+fibR(n : int, k : int, a : [int]) -> [int] {
+    if (k > n) {
+        a;
+    } else {
+        fibR(n, k+1,
+        if (k == 0) {
+            a;
+        } else {
+            arrayPush(a,
+            if (k == 1) {
+                0;
+            } else if (k == 2) {
+                1;
+            } else {
+                a[k - 3] + a[k - 2];
+            })
+        })
+    }
+}
+
+main() {
+    println(fib(1));
+    println(fib(2));
+    println(fib(3));
+    println(fib(4));
+    println(fib(5));
+    println(fib(6));
+
+    // println(fib2(150000));
+    quit(0);
+}

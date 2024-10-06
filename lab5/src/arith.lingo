@@ -1,0 +1,6 @@
+S = sum;
+sum = mul:l "+" sum:r { ArSum(:l, :r)} | mul;
+mul = factor:l "*" mul :r { ArMult(:l, :r)} | factor;
+factor = int | "(" S :e ")" {:e};
+int = digit+ $s { ArInt(s2i($s)) };
+digit = '0'-'9';

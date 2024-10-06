@@ -1,0 +1,120 @@
+import simplifier;
+import math/math;
+import ds/tree;
+import sys/system;
+
+
+export {
+    makeVarTree(arr : [Pair<string, Pair<int, int>>]) -> Tree<string, Pair<int, int>>;
+
+    calc(expr : ArExpr, varTree : Tree<string, Pair<int, int>>) -> Maybe<Pair<int, int>>;
+
+    printFract(expr : ArExpr, varTree : Tree<string, Pair<int, int>>) -> void;
+}
+
+makeVarTree(arr : [Pair<string, Pair<int, int>>]) -> Tree<string, Pair<int, int>> {
+    setTreeValues(makeTree(), arr)
+}
+
+printFract(expr : ArExpr, varTree : Tree<string, Pair<int, int>>) -> void {
+    e = simplArExpr(expr);
+    res = calc(e, varTree);
+    switch(res) {
+        None() : println("Incorrect expression");
+        Some(v) : if (v.second == 0) println("Division by zero")
+                  else if (v.second == 1) println(i2s(v.first))
+                  else if (v.second == -1) println(i2s(-v.first))
+                  else if (v.second < 0) println(i2s(-v.first) + "/" + i2s(-v.second))
+                  else println(i2s(v.first) + "/" + i2s(v.second))
+    }
+}
+
+getArgs(a : Maybe<Pair<int, int>>, b : Maybe<Pair<int, int>>) -> Maybe<Pair<Pair<int, int>, Pair<int, int>>> {
+    if (isNone(a) || isNone(b)) None()
+    else Some(Pair(either(a, Pair(1, 0)), either(b, Pair(1, 0))))
+}
+
+sumFract(a : Pair<int, int>, b : Pair<int, int>) -> Pair<int, int> {
+    if (a.second == 0 || b.second == 0) Pair(1, 0)
+    else {
+        num = a.first * b.second + b.first * a.second;
+        den = a.second * b.second;
+        if (den == 0) Pair(1, 0)
+        else Pair(num/iabs(gcd(num, den)), den/iabs(gcd(num, den)))
+    }
+}
+
+multFract(a : Pair<int, int>, b : Pair<int, int>) -> Pair<int, int> {
+    if (a.second == 0 || b.second == 0) Pair(1, 0)
+    else {
+        num = a.first * b.first;
+        den = a.second * b.second;
+        Pair(num/iabs(gcd(num, den)), den/iabs(gcd(num, den)))
+    }
+}
+
+negFract(a : Pair<int, int>) -> Pair<int, int> {
+    Pair(-a.first, a.second)
+}
+
+degFract(v : Pair<int, int>, d : ArInt) -> Pair<int, int> {
+    if (d.val < 0) degFract(Pair(v.second, v.first), ArInt(-d.val))
+    else if (d.val == 0) Pair(1, 1)
+    else if (d.val == 1) v
+    else degFract(multFract(v, v), ArInt(d.val - 1))
+}
+
+calc(expr : ArExpr, varTree : Tree<string, Pair<int, int>>) -> Maybe<Pair<int, int>> {
+    switch(expr) {
+        ArDeg(v, d) : {
+            switch(calc(v, varTree)) {
+                None() : None();
+                Some(a) : Some(degFract(a, d));
+            }
+        }
+
+        ArSum(l, r) : {
+            switch(getArgs(calc(l, varTree), calc(r, varTree))) {
+                None() : None();
+                Some(v) : Some(sumFract(v.first, v.second));
+            }
+        }
+
+        ArDiff(l, r) : {
+            switch(getArgs(calc(l, varTree), calc(r, varTree))) {
+                None() : None();
+                Some(v) : Some(sumFract(v.first, negFract(v.second)));
+            }
+        }
+
+        ArMult(l, r) : {
+            switch(getArgs(calc(l, varTree), calc(r, varTree))) {
+                None() : None();
+                Some(v) : Some(multFract(v.first, v.second));
+            }
+        }
+
+        ArDiv(l, r) : {
+            switch(getArgs(calc(l, varTree), calc(r, varTree))) {
+                None() : None();
+                Some(v) : {
+                    if (v.second.second == 0) Some(Pair(1, 0))
+                    else Some(multFract(v.first, Pair(v.second.second, v.second.first)))
+                };
+            }
+        }
+
+        ArNeg(v) : {
+            switch(calc(v, varTree)) {
+                None() : None();
+                Some(a) : Some(negFract(a));
+            }
+        }
+
+        ArInt(v) : Some(Pair(v, 1));
+
+        ArVar(v) : maybeBind(lookupTree(varTree, v), \a -> {Some(a)});
+        
+        ArDer(e1, v) : calc(simplArExpr(e1), varTree);
+    }
+}
