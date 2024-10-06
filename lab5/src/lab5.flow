@@ -4,30 +4,29 @@ import ds/tree;
 import lingo/pegcode/driver;
 import fs/filesystem;
 
-export {
-  Expr ::= Sum, Mul, Int;
-    Int(val : int);
-    Sum(i1 : Expr, i2 : Expr);
-    Mul(i1 : Expr, i2 : Expr);
+grammar = compilePegGrammar("#include exprParser.lingo");
 
-  ar2i(e : Expr) -> int {
-    switch (e) {
-      Int(val): val;
-      Sum(i1, i2): ar2i(i1) + ar2i(i2);
-      Mul(i1, i2): ar2i(i1) * ar2i(i2);
-    }
-  }
+Expr ::= Sum, Mul, Int;
+  Int(i : int);
+  Sum(e1 : Expr, e2 : Expr);
+  Mul(e1 : Expr, e2 : Expr);
 
-  calculate(s : string) -> int {
-	  t = setTree(defaultPegActions.t, "calculate", \as -> Int(s2i(as[0])));
-    expr = parsic(compilePegGrammar("#include exprParser.lingo"), s, SemanticActions(t));
-    ar2i(expr)
+ex2i(e : Expr) -> int {
+  switch (e) {
+    Int(i): i;
+    Sum(e1, e2): ex2i(e1) + ex2i(e2);
+    Mul(e1, e2): ex2i(e1) * ex2i(e2);
   }
 }
 
-main() {
-  expr = "2*(5+5)";
-  println(calculate(expr));
+calculate(s : string) -> int {
+	t = setTree(defaultPegActions.t, "calculate", \as -> Int(s2i(as[0])));
+  expr = parsic(grammar, s, SemanticActions(t));
+  ex2i(expr)
+}
 
+main() {
+  expr = "2*(5+5)+30";
+  println(calculate(expr));
   quit(0);
 }
