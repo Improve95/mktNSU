@@ -1,0 +1,2 @@
+digit = '0'-'9';
+int = digit+ $s { ArInt(s2i($s)) };
