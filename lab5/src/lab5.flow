@@ -20,8 +20,7 @@ ex2i(e : Expr) -> int {
 }
 
 calculate(s : string) -> int {
-	t = setTree(defaultPegActions.t, "calculate", \as -> Int(s2i(as[0])));
-  expr = parsic(grammar, s, SemanticActions(t));
+  expr = parsic(grammar, s, defaultPegActions);
   ex2i(expr)
 }
 
