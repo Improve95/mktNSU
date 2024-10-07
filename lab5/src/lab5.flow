@@ -10,6 +10,21 @@ Expr ::= Sum, Mul, Int;
   Int(i : int);
   Sum(e1 : Expr, e2 : Expr);
   Mul(e1 : Expr, e2 : Expr);
+  
+ex2s(e : Expr, isMul : int) -> string {
+  switch (e : Expr) {
+    Int(i) : i2s(i);
+    Sum(e1, e2) : {
+      recExpr = ex2s(e1, 0)  + "+" + ex2s(e2, 0); 
+      if (isMul == 1) {
+        "(" + recExpr + ")";
+      } else { 
+        recExpr;
+      }
+    }
+    Mul(e1, e2) :  ex2s(e1, 1)  + "*" +  ex2s(e2, 1);
+  }
+}
 
 ex2i(e : Expr) -> int {
   switch (e) {
@@ -19,13 +34,12 @@ ex2i(e : Expr) -> int {
   }
 }
 
-calculate(s : string) -> int {
-  expr = parsic(grammar, s, defaultPegActions);
-  ex2i(expr)
-}
-
 main() {
   expr = "2*(5+5)+30";
-  println(calculate(expr));
+  parseExpr = parsic(grammar, expr, defaultPegActions);
+
+  println(ex2s(parseExpr, 0));
+  println(ex2i(parseExpr));
+
   quit(0);
 }
