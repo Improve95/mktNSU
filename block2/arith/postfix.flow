@@ -1,15 +1,22 @@
+import string;
+import math/math;
+import ds/tree;
 import lingo/pegcode/driver;
-import ds/dlist;
+import fs/filesystem;
 
 export {
-    RpnExpr ::= SumRpn, MulRpn, ValRpn;
-    rpnEx2i(e : RpnExpr);
+  RpnExpr ::= SumRpn, MulRpn, ValRpn;
+	ValRpn (d : double);
+	SumRpn (e1 : RpnExpr, e2 : RpnExpr);
+	MulRpn (e1 : RpnExpr, e2 : RpnExpr);
+
+  rpnEx2i(e : RpnExpr) -> double;
+  rpnEx2s(e : RpnExpr) -> string;
 }
 
-RpnExpr ::= SumRpn, MulRpn, ValRpn;
-	ValRpn : (d : double);
-	SumRpn : (e1 : RpnExpr, e2 : RpnExpr);
-	MulRpn : (e1 : RpnExpr, e2 : RpnExpr);
+rpnEx2s(e : RpnExpr) -> string {
+  "test";
+}
 
 rpnEx2i(e : RpnExpr) -> double {
   switch (e) {

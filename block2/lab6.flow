@@ -1,11 +1,4 @@
-import string;
-import math/math;
-import ds/tree;
-import lingo/pegcode/driver;
-import fs/filesystem;
-
 import infix;
-import postfix;
 
 grammar = compilePegGrammar("#include infix.lingo");
 rpnGrammar = compilePegGrammar("#include postfix.lingo");

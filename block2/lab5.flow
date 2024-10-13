@@ -4,7 +4,9 @@ import ds/tree;
 import lingo/pegcode/driver;
 import fs/filesystem;
 
-grammar = compilePegGrammar("#include exprParser.lingo");
+import infix;
+
+grammar = compilePegGrammar("#include infix.lingo");
 
 Expr ::= Sum, Mul, Int;
   Int(i : int);

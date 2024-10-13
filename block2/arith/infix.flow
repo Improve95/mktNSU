@@ -1,5 +1,4 @@
-import lingo/pegcode/driver;
-import ds/dlist;
+import postfix;
 
 export {
   Expr ::= Sum, Mul, Int;
@@ -7,8 +6,8 @@ export {
   Sum(e1 : Expr, e2 : Expr);
   Mul(e1 : Expr, e2 : Expr);
 
-  ex2s(e : Expr, isMul : int);
-  ex2i(e : Expr);
+  ex2s(e : Expr, isMul : int) -> string;
+  ex2i(e : Expr) -> int;
 }
 
 ex2s(e : Expr, isMul : int) -> string {
