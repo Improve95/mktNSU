@@ -1,0 +1,20 @@
+import lingo/pegcode/driver;
+import ds/dlist;
+
+export {
+    RpnExpr ::= SumRpn, MulRpn, ValRpn;
+    rpnEx2i(e : RpnExpr);
+}
+
+RpnExpr ::= SumRpn, MulRpn, ValRpn;
+	ValRpn : (d : double);
+	SumRpn : (e1 : RpnExpr, e2 : RpnExpr);
+	MulRpn : (e1 : RpnExpr, e2 : RpnExpr);
+
+rpnEx2i(e : RpnExpr) -> double {
+  switch (e) {
+    ValRpn(i): i;
+    SumRpn(e1, e2): rpnEx2i(e1) + rpnEx2i(e2);
+    MulRpn(e1, e2): rpnEx2i(e1) * rpnEx2i(e2);
+  }
+}

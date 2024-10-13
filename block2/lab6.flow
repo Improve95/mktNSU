@@ -1,0 +1,26 @@
+import string;
+import math/math;
+import ds/tree;
+import lingo/pegcode/driver;
+import fs/filesystem;
+
+import infix;
+import postfix;
+
+grammar = compilePegGrammar("#include infix.lingo");
+rpnGrammar = compilePegGrammar("#include postfix.lingo");
+
+main() {
+  expr = "2*(5+5)+30";
+  parseExpr = parsic(grammar, expr, defaultPegActions);
+  println(ex2s(parseExpr, 0));
+  println(ex2i(parseExpr));
+
+  println("");
+
+  // expr2 = "3 4 +";
+  // parseExpr2 = parsic(grammar, expr2, defaultPegActions);
+  // println(ex2i(parseExpr2));
+
+  quit(0);
+}

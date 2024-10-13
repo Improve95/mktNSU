@@ -1,3 +1,4 @@
+/* lab5 */
 sum = mul :i1 "+" sum :i2 { Sum(:i1, :i2) } | mul;
 mul = staples :i1 "*" mul :i2 { Mul(:i1, :i2) } | staples;
 staples = int | "(" sum :expr ")" { :expr };

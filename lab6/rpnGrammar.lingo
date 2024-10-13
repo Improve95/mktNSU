@@ -1,7 +1,0 @@
-RpnExpr = (number | mul | sum)+;
-
-sum = ws "+" ws {Add_rpn()};
-mul = ws "*" ws {Mul_rpn()};
-number = ws (digit+)$d ws {ValRpn(s2d($d))} ;
-digit = '0'-'9';
-ws = (" " | "\t" | "\n")*;

@@ -1,23 +1,16 @@
-import string;
-import math/math;
-import ds/tree;
 import lingo/pegcode/driver;
-import fs/filesystem;
+import ds/dlist;
 
-grammar = compilePegGrammar("#include rpmGrammar.lingo");
-
-
-RpnExpr ::= SumRpn, MulRpn, ValRpn;
-	SumRpn : ();
-	MulRpn : ();
-	ValRpn : (val_rpn : double);
-
-
-Expr ::= Sum, Mul, Int;
+export {
+  Expr ::= Sum, Mul, Int;
   Int(i : int);
   Sum(e1 : Expr, e2 : Expr);
   Mul(e1 : Expr, e2 : Expr);
-  
+
+  ex2s(e : Expr, isMul : int);
+  ex2i(e : Expr);
+}
+
 ex2s(e : Expr, isMul : int) -> string {
   switch (e : Expr) {
     Int(i) : i2s(i);
@@ -39,14 +32,4 @@ ex2i(e : Expr) -> int {
     Sum(e1, e2): ex2i(e1) + ex2i(e2);
     Mul(e1, e2): ex2i(e1) * ex2i(e2);
   }
-}
-
-main() {
-  expr = "2*(5+5)+30";
-  parseExpr = parsic(grammar, expr, defaultPegActions);
-
-  println(ex2s(parseExpr, 0));
-  println(ex2i(parseExpr));
-
-  quit(0);
 }
