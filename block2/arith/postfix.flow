@@ -1,9 +1,19 @@
 import infix;
 
+/* 
+	s2re - string to rpn expression
+	ie2re - infix expression to rpn expression
+*/
+
 export {
-	s2re(expr: string) -> [RpnExpr];
+	s2re(s: string) -> [RpnExpr];
+	ie2re(e : InfixExpr) -> [RpnExpr];
 }
 
-s2re(str: string) {
+s2re(s: string) {
 	parsic(postfixGrammar, str, defaultPegActions);
+}
+
+ie2re(e : InfixExpr) -> [RpnExpr] {
+	
 }

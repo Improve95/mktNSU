@@ -1,14 +1,20 @@
 import exprDecl;
 
+/* 
+  	re2ie - rpn expression to infix expression
+	ie2s - infix expression to string
+  	calIe - calculate infix expression
+*/
+
 export {
-  re2ie(expr : [RpnExpr]) -> InfixExpr;
-  ie2s(expr : InfixExpr, priority : int) -> string;
+  re2ie(e : [RpnExpr]) -> InfixExpr;
+  ie2s(e : InfixExpr, priority : int) -> string;
+  calcIe(e : InfixExpr) -> int;
 }
 
-  
-re2ie(expr : [RpnExpr]) -> InfixExpr {
+re2ie(e : [RpnExpr]) -> InfixExpr {
   	stack : [InfixExpr] = [];
-	a = fold(expr, stack, \st, val -> {
+	a = fold(e, stack, \st, val -> {
 		switch (val) {
 			Const(c):
 				arrayPush(st, Const(c));
@@ -49,6 +55,17 @@ ie2s(e : InfixExpr, priority : int) -> string {
 	}
 }
 
-calculateInfix() {
-
+calcIe(e : InfixExpr) -> int {
+	switch (e) {
+		Const(number) : number;
+		BinOp(name, l, r) : {
+			if (name == "+") {
+				calcIe(l) + calcIe(r);
+			} else if (name == "*") {
+				calcIe(l) * calcIe(r);
+			} else {
+				0;
+			}
+		} 
+	}
 }
