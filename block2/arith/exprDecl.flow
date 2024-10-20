@@ -1,0 +1,25 @@
+import string;
+import math/math;
+import ds/tree;
+import lingo/pegcode/driver;
+import fs/filesystem;
+
+export {
+    /* lingo */
+    infixGrammar = compilePegGrammar("#include infix.lingo");
+    postfixGrammar = compilePegGrammar("#include postfix.lingo");
+
+    /* lab5 */
+    Expr ::= Sum, Mul, Int;
+    Int(i : int);
+    Sum(e1 : Expr, e2 : Expr);
+    Mul(e1 : Expr, e2 : Expr);
+
+    /* la6 */
+    RpnExpr ::= Const, Var, OpName;
+
+    /* lab7 */
+	Const(value : double);
+	Var(name : string);
+	OpName(name : string);
+}

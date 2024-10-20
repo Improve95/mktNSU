@@ -1,4 +1,4 @@
-import string;
+ximport string;
 import math/math;
 import ds/tree;
 import lingo/pegcode/driver;

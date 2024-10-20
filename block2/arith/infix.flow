@@ -1,34 +1,32 @@
-import postfix;
+import exprDecl;
 
 export {
-  Expr ::= Sum, Mul, Int;
-  Int(i : int);
-  Sum(e1 : Expr, e2 : Expr);
-  Mul(e1 : Expr, e2 : Expr);
+  /* general */
+  infix2s(e : Expr, isMul : int) -> string;
 
-  ex2s(e : Expr, isMul : int) -> string;
-  ex2i(e : Expr) -> int;
+  /* lab5 */
+  infix2i(e : Expr) -> int;
 }
 
-ex2s(e : Expr, isMul : int) -> string {
+infix2s(e : Expr, isMul : int) -> string {
   switch (e : Expr) {
     Int(i) : i2s(i);
     Sum(e1, e2) : {
-      recExpr = ex2s(e1, 0)  + "+" + ex2s(e2, 0); 
+      recExpr = infix2s(e1, 0)  + "+" + infix2s(e2, 0); 
       if (isMul == 1) {
         "(" + recExpr + ")";
       } else { 
         recExpr;
       }
     }
-    Mul(e1, e2) :  ex2s(e1, 1)  + "*" +  ex2s(e2, 1);
+    Mul(e1, e2) :  infix2s(e1, 1)  + "*" +  infix2s(e2, 1);
   }
 }
 
-ex2i(e : Expr) -> int {
+infix2i(e : Expr) -> int {
   switch (e) {
     Int(i): i;
-    Sum(e1, e2): ex2i(e1) + ex2i(e2);
-    Mul(e1, e2): ex2i(e1) * ex2i(e2);
+    Sum(e1, e2): infix2i(e1) + infix2i(e2);
+    Mul(e1, e2): infix2i(e1) * infix2i(e2);
   }
 }

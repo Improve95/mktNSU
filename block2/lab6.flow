@@ -1,7 +1,5 @@
-import infix;
-
-grammar = compilePegGrammar("#include infix.lingo");
-rpnGrammar = compilePegGrammar("#include postfix.lingo");
+import exprDecl;
+import postfix;
 
 main() {
   expr = "2*(5+5)+30";
@@ -11,9 +9,18 @@ main() {
 
   println("");
 
-  // expr2 = "3 4 +";
-  // parseExpr2 = parsic(grammar, expr2, defaultPegActions);
-  // println(ex2i(parseExpr2));
+  /* expr2 = "3 4 +";
+  parseExpr2 = parseRPN(expr2);
+  println(rpnEx2i(parseExpr2)); */
+
+  /* 
+    parseRPN(expt)
+    translateToInfix(rpn1);
+    translateToRPN(infix);
+
+    infixToString(infix) + " = " + d2s(calculateRPN(rpn1, variables))
+    RPNToString(rpn2)
+   */
 
   quit(0);
 }

@@ -1,7 +1,5 @@
 /* lab6 */
-RpnExpr = (number | mul | sum)+;
-sum = ws "+" ws {SumRpn()};
-mul = ws "*" ws {MulRpn()};
-number = ws (digit+)$d ws {ValRpn(s2d($d))} ;
-digit = '0'-'9';
-ws = (" " | "\t" | "\n")*;
+exp = (unary)+:e { :e };
+op = ws ('+' |'*')$name ws { OpName($name) };
+const = ('0'-'9')+$d { Const(s2d($d)) };
+ws = (' '|'\r'|'\n'|'\t')*;
