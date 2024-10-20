@@ -2,25 +2,13 @@ import exprDecl;
 import postfix;
 
 main() {
-  expr = "2*(5+5)+30";
-  parseExpr = parsic(grammar, expr, defaultPegActions);
-  println(ex2s(parseExpr, 0));
-  println(ex2i(parseExpr));
 
-  println("");
+  str = "5 34 +";
 
-  /* expr2 = "3 4 +";
-  parseExpr2 = parseRPN(expr2);
-  println(rpnEx2i(parseExpr2)); */
+  rpnExpr = s2re(str);
+  infixExpr = re2ie(rpnExpr);
 
-  /* 
-    parseRPN(expt)
-    translateToInfix(rpn1);
-    translateToRPN(infix);
-
-    infixToString(infix) + " = " + d2s(calculateRPN(rpn1, variables))
-    RPNToString(rpn2)
-   */
+  println(infixExpr);
 
   quit(0);
 }

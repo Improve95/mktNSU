@@ -1,32 +1,31 @@
 import exprDecl;
 
 export {
-  /* general */
-  infix2s(e : Expr, isMul : int) -> string;
-
-  /* lab5 */
-  infix2i(e : Expr) -> int;
+  //lab6
+  re2ie(expr : [RpnExpr]) -> InfixExpr;
 }
 
-infix2s(e : Expr, isMul : int) -> string {
-  switch (e : Expr) {
-    Int(i) : i2s(i);
-    Sum(e1, e2) : {
-      recExpr = infix2s(e1, 0)  + "+" + infix2s(e2, 0); 
-      if (isMul == 1) {
-        "(" + recExpr + ")";
-      } else { 
-        recExpr;
-      }
-    }
-    Mul(e1, e2) :  infix2s(e1, 1)  + "*" +  infix2s(e2, 1);
-  }
-}
+re2ie(expr : [RpnExpr]) -> InfixExpr {
+  stack : [InfixExpr] = [];
 
-infix2i(e : Expr) -> int {
-  switch (e) {
-    Int(i): i;
-    Sum(e1, e2): infix2i(e1) + infix2i(e2);
-    Mul(e1, e2): infix2i(e1) * infix2i(e2);
-  }
+	a = fold(expr, stack, \st, val -> {
+		switch (val) {
+			Const(c):
+				arrayPush(st, Const(c));
+
+			/* Var(v):
+				arrayPush(st, Var(v)); */
+
+			OpName(name): {
+				right = lastElement(st, Const(0));
+				a = removeIndex(st, length(st) - 1);
+				left = lastElement(a, Const(0));
+				b = removeIndex(a, length(a) - 1);
+				arrayPush(b, BinOp(name, left, right));
+			}
+    
+		}
+	});
+
+	a[0];
 }

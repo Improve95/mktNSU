@@ -1,58 +1,11 @@
 import infix;
-import exprDecl;
 
 export {
-  /* lab6 */
-  parseRpn(expr : string) -> [RpnExpr];
-  calculateRpn(arr : [RpnExpr], variables : Tree<string, double>) -> double;
-	RpnToString(rpn : [RpnExpr]) -> string;
-  translateToInfix(arr : [RpnExpr]) -> Expr;
-	translateToRpn(expr : Expr) -> [RpnExpr];
+	s2re(expr: string) -> [RpnExpr];
 }
 
-translateToInfix(arr : [RpnExpr]) {
-	stack : [Expr] = [];
-	a = fold(arr, stack, \st, val -> {
-		switch (val) {
-			Const(c):
-				arrayPush(st, Const(c));
-			Var(v):
-				arrayPush(st, Var(v));
-			OpName(name): {
-				right = lastElement(st, Const(0.0));
-				a = removeIndex(st, length(st) - 1);
-				left = lastElement(a, Const(0.0));
-				b = removeIndex(a, length(a) - 1);
-				arrayPush(b, BinOp(name, left, right));
-			}
-		}
-	});
-	a[0];
-}
 
-translateToRpn(expr : Expr) {
-	rpn : [RpnExpr] = [];
-	translateReq(expr, rpn);
-}
 
-RpnToString(rpn : [RpnExpr]) {
-	fold(rpn, "", \str, val -> {
-		switch(val) {
-			Const(c):
-				str+ d2s(c) + " ";
-			Var(v):
-				str + v + " ";
-			OpName(name): {
-				str + name + " ";
-			}
-		}
-	});
-}
-
-calculateRpn(arr : [RpnExpr], variables : Tree<string, double>) {
-	calculate(translateToInfix(arr), variables);
-}
-
-parseRpn(expr : string) -> [RpnExpr] {
-  parsic(postfixGrammar, expr, defaultPegActions);
+s2re(str: string) {
+	parsic(postfixGrammar, str, defaultPegActions);
 }
