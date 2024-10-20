@@ -3,12 +3,16 @@ import postfix;
 main() {
   str : string = getUrlParameter("expr");
 
-  rpnExpr = s2re(str);
-  infixExpr = re2ie(rpnExpr);
+  re = s2re(str);
+  ie = re2ie(re);
 
-  println(ie2s(infixExpr, 0));
+  re2 = ie2re(ie);
 
-  println(calcIe(infixExpr));
+  /* println(re);
+  println(re2); */
+
+  println(ie2s(ie, 0));
+  println(calcIe(ie));
 
   quit(0);
 }

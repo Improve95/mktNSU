@@ -11,9 +11,22 @@ export {
 }
 
 s2re(s: string) {
-	parsic(postfixGrammar, str, defaultPegActions);
+	parsic(postfixGrammar, s, defaultPegActions);
 }
 
-ie2re(e : InfixExpr) -> [RpnExpr] {
-	
+ie2re(ie : InfixExpr) -> [RpnExpr] {
+	re : [RpnExpr] = [];
+	translateReq(ie, re);
+}
+
+translateReq(ie : InfixExpr, re : [RpnExpr]) -> [RpnExpr] {
+	switch(ie) {
+		Const(c): arrayPush(re, Const(c));
+		BinOp(name, l, r): {
+			a = translateReq(l, re);
+			b = translateReq(r, a);
+			arrayPush(b, OpName(name));
+		}
+		// default: arrayPush(re, Const(0));
+	}
 }
