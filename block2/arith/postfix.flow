@@ -16,17 +16,16 @@ s2re(s: string) {
 
 ie2re(ie : InfixExpr) -> [RpnExpr] {
 	re : [RpnExpr] = [];
-	translateReq(ie, re);
+	ie2reReqursive(ie, re);
 }
 
-translateReq(ie : InfixExpr, re : [RpnExpr]) -> [RpnExpr] {
+ie2reReqursive(ie : InfixExpr, re : [RpnExpr]) -> [RpnExpr] {
 	switch(ie) {
 		Const(c): arrayPush(re, Const(c));
 		BinOp(name, l, r): {
-			a = translateReq(l, re);
-			b = translateReq(r, a);
+			a = ie2reReqursive(l, re);
+			b = ie2reReqursive(r, a);
 			arrayPush(b, OpName(name));
 		}
-		// default: arrayPush(re, Const(0));
 	}
 }

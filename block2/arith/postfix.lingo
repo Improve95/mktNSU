@@ -1,5 +1,5 @@
 exp = (unary)+:e { :e };
-unary = ws const:u ws { :u } | ws op:u ws {:u };
-op = ws ('+' |'*')$name ws { OpName($name) };
+unary = ws const:u ws { :u } | ws op:u ws { :u };
+op = ws ('+' | '*')$name ws { OpName($name) };
 const = ('0'-'9')+$d { Const(s2i($d)) };
-ws = (' '|'\r'|'\n'|'\t')*;
+ws = (' ')*;
