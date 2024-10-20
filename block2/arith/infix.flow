@@ -5,8 +5,8 @@ export {
   ie2s(expr : [InfixExpr]) -> str;
 }
 
-re2ie(expr : [RpnExpr]) -> InfixExpr {
   stack : [InfixExpr] = [];
+re2ie(expr : [RpnExpr]) -> InfixExpr {
 
 	a = fold(expr, stack, \st, val -> {
 		switch (val) {
@@ -31,5 +31,5 @@ re2ie(expr : [RpnExpr]) -> InfixExpr {
 }
 
 ie2s(expr : [InfixExpr]) -> str {
-  "null infix expr str"
+
 }

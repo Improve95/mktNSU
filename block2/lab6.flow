@@ -1,8 +1,6 @@
-import exprDecl;
 import postfix;
 
 main() {
-
   str : string = getUrlParameter("expr");
 
   rpnExpr = s2re(str);

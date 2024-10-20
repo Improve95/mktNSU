@@ -4,5 +4,3 @@ mul = staples :i1 "*" mul :i2 { Mul(:i1, :i2) } | staples;
 staples = int | "(" sum :expr ")" { :expr };
 int = digit+ $d { Int(s2i($d)) };
 digit = '0'-'9';
-
-/* lab6 */
