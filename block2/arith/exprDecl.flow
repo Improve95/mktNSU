@@ -9,21 +9,12 @@ export {
     infixGrammar = compilePegGrammar("#include infix.lingo");
     postfixGrammar = compilePegGrammar("#include postfix.lingo");
 
-    /* lab5 */
-    
-    /* Expr ::= Sum, Mul, Int;
-    Int(i : int);
-    Sum(e1 : InfixExpr, e2 : InfixExpr);
-    Mul(e1 : InfixExpr, e2 : InfixExpr); */
-
-    /* la6 */
-    InfixExpr ::= Const, /* Var, */ BinOp /* Log,  Null */;
+    /* Infix */
+    InfixExpr ::= Const, BinOp;
     BinOp(name : string, left: InfixExpr, right: InfixExpr);
-	// Var(name : string);
 	Const(i : int);
-	// Log(ex : Expr);
-	// Null();
 
+    /* Postfix */
     RpnExpr ::= Const, OpName;
     OpName(op : string);
 }
