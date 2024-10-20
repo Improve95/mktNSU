@@ -11,10 +11,10 @@ export {
 
     /* lab5 */
     
-    Expr ::= Sum, Mul, Int;
+    /* Expr ::= Sum, Mul, Int;
     Int(i : int);
     Sum(e1 : InfixExpr, e2 : InfixExpr);
-    Mul(e1 : InfixExpr, e2 : InfixExpr);
+    Mul(e1 : InfixExpr, e2 : InfixExpr); */
 
     /* la6 */
     InfixExpr ::= Const, /* Var, */ BinOp /* Log,  Null */;

@@ -1,6 +1,6 @@
-/* lab6 */
 exp = (unary)+:e { :e };
-unary = ws const:u ws { :u } | ws var:u ws { :u } | ws op:u ws {:u };
+unary = ws const:u ws { :u } /* | ws var:u  ws { :u } */ | ws op:u ws {:u };
 op = ws ('+' |'*')$name ws { OpName($name) };
-const = ('0'-'9')+$d { Const(s2d($d)) };
+const = ('0'-'9')+$d { Const(s2i($d)) };
+// var = ('a' - 'z')+$name { Var($name) };
 ws = (' '|'\r'|'\n'|'\t')*;

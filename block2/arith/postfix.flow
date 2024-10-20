@@ -4,8 +4,6 @@ export {
 	s2re(expr: string) -> [RpnExpr];
 }
 
-
-
 s2re(str: string) {
 	parsic(postfixGrammar, str, defaultPegActions);
 }

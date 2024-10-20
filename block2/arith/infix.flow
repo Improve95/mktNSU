@@ -1,8 +1,8 @@
 import exprDecl;
 
 export {
-  //lab6
   re2ie(expr : [RpnExpr]) -> InfixExpr;
+  ie2s(expr : [InfixExpr]) -> str;
 }
 
 re2ie(expr : [RpnExpr]) -> InfixExpr {
@@ -28,4 +28,8 @@ re2ie(expr : [RpnExpr]) -> InfixExpr {
 	});
 
 	a[0];
+}
+
+ie2s(expr : [InfixExpr]) -> str {
+  "null infix expr str"
 }
