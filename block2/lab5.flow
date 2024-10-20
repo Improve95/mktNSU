@@ -1,4 +1,4 @@
-ximport string;
+import string;
 import math/math;
 import ds/tree;
 import lingo/pegcode/driver;
@@ -24,7 +24,7 @@ ex2s(e : Expr, isMul : int) -> string {
         recExpr;
       }
     }
-    Mul(e1, e2) :  ex2s(e1, 1)  + "*" +  ex2s(e2, 1);
+    Mul(e1, e2) : ex2s(e1, 1)  + "*" +  ex2s(e2, 1);
   }
 }
 

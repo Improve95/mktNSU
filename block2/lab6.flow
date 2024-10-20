@@ -6,8 +6,8 @@ main() {
   rpnExpr = s2re(str);
   infixExpr = re2ie(rpnExpr);
 
-  println(rpnExpr);
-  println(infixExpr);
+  // println(rpnExpr);
+  println(ie2s(infixExpr, 0));
 
   quit(0);
 }

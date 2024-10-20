@@ -8,6 +8,6 @@ s2re(str: string) {
 	parsic(postfixGrammar, str, defaultPegActions);
 }
 
-calculateRpn(expr : [RpnExpr] ) -> int {
-	
-}
+/* calculateRpn(expr : [RpnExpr] ) -> int {
+
+} */

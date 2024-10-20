@@ -2,12 +2,12 @@ import exprDecl;
 
 export {
   re2ie(expr : [RpnExpr]) -> InfixExpr;
-  ie2s(expr : [InfixExpr]) -> str;
+  ie2s(expr : InfixExpr, priority : int) -> string;
 }
 
-  stack : [InfixExpr] = [];
+  
 re2ie(expr : [RpnExpr]) -> InfixExpr {
-
+  stack : [InfixExpr] = [];
 	a = fold(expr, stack, \st, val -> {
 		switch (val) {
 			Const(c):
@@ -30,6 +30,27 @@ re2ie(expr : [RpnExpr]) -> InfixExpr {
 	a[0];
 }
 
-ie2s(expr : [InfixExpr]) -> str {
-
+ie2s(e : InfixExpr, priority : int) -> string {
+	switch (e) {
+		Const(number) : i2s(number);
+		BinOp(name, l, r) : {
+			if (name == "+") {
+				retStr = ie2s(l, 2) + "+" + ie2s(r, 2);
+				if (priority > 1) {
+					"(" + retStr + ")";
+				} else {
+					retStr;
+				}
+			} else if (name == "*") {
+				retStr = ie2s(l, 2) + "*" + ie2s(r, 2);
+				if (priority > 1) {
+					"(" + retStr + ")";
+				} else {
+					retStr;
+				}
+			} else {
+				"Null";
+			}
+		}
+	}
 }
