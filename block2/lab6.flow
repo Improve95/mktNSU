@@ -5,6 +5,8 @@ main() {
 
   re = s2re(str);
   ie = re2ie(re);
+  println(re);
+  println(ie);
 
   re2 = ie2re(ie);
 

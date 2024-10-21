@@ -10,6 +10,9 @@ c5:
 c6:
 	../bin/flowc1 block2/lab6.flow jar=lab I=block2/arith
 
-r6:
-	java -jar lab.jar expr="34 5 + 5 *"
+c7:
+	../bin/flowc1 block2/lab7.flow jar=lab I=block2/arith
+
+r:
+	java -jar lab.jar expr="7 + 8"
 

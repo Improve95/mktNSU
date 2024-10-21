@@ -1,0 +1,6 @@
+add = ws mul:l ws "+" ws add:r ws { BinOp("+", :l, :r) } | mul;
+
+mul = ws const:l ws "*" ws mul:r ws { BinOp("*", :l, :r) } | const;
+const = ('0'-'9')+$d { Const(s2i($d)) };
+
+ws = (' ')*;

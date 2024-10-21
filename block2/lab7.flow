@@ -1,0 +1,9 @@
+import postfix;
+
+main() {
+    str : string = getUrlParameter("expr");
+
+    println(s2ie(str));
+
+    quit(0);
+}

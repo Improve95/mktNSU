@@ -1,15 +1,21 @@
 import exprDecl;
 
 /* 
+	s2ie - string to infix expression
   	re2ie - rpn expression to infix expression
 	ie2s - infix expression to string
   	calIe - calculate infix expression
 */
 
 export {
-  re2ie(e : [RpnExpr]) -> InfixExpr;
-  ie2s(e : InfixExpr, priority : int) -> string;
-  calcIe(e : InfixExpr) -> int;
+	s2ie(s : string) -> [InfixExpr];
+  	re2ie(e : [RpnExpr]) -> InfixExpr;
+  	ie2s(e : InfixExpr, priority : int) -> string;
+  	calcIe(e : InfixExpr) -> int;
+}
+
+s2ie(s : string) -> [InfixExpr] {
+	parsic(infixGrammar, s, defaultPegActions);
 }
 
 re2ie(e : [RpnExpr]) -> InfixExpr {
