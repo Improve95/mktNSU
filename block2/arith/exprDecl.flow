@@ -17,6 +17,6 @@ export {
     Null();
 
     /* Postfix */
-    RpnExpr ::= Const, OpName;
-    OpName(op : string);
+    // RpnExpr ::= Const, OpName;
+    // OpName(op : string);
 }

@@ -1,4 +1,4 @@
-import labs/block2/arith/postfix;
+import labs/block2/arith/infix;
 
 inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, double> {
     foldi(vars, makeTree(), \i, tree, variable -> {
@@ -14,10 +14,10 @@ main() {
     ie = s2ie(expr);
     println(ie);
 
-    varsValues : Tree<string, double> = inputVariablesIntoTree(vars, values);
-    // result = calcIe(ie, varsValue);
+    varsValues = inputVariablesIntoTree(vars, values);
+    result = calcIe(ie, varsValues);
 
-    // println(result);
+    println(result);
 
     quit(0);
 }

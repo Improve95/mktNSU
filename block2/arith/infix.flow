@@ -1,3 +1,4 @@
+// import labs/block2/arith/infix;
 import labs/block2/arith/exprDecl;
 
 /* 
@@ -8,8 +9,8 @@ import labs/block2/arith/exprDecl;
 */
 
 export {
-	s2ie(s : string) -> [InfixExpr];
-  	re2ie(e : [RpnExpr]) -> InfixExpr;
+	s2ie(s : string) -> InfixExpr;
+  	// re2ie(e : [RpnExpr]) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
   	calcIe(e : InfixExpr, vars : Tree<string, double>) -> double;
 }
@@ -18,7 +19,7 @@ buildOp(xs : [flow]) {
 	fold(xs[2], xs[1], \acc, x -> BinOp(xs[0], acc, x));
 }
 
-s2ie(s : string) -> [InfixExpr] {
+s2ie(s : string) -> InfixExpr {
 	specialPegActions = {
 		t1 = setTree(defaultPegActions.t, "buildOp", buildOp);
 		SemanticActions(t1);
@@ -26,7 +27,7 @@ s2ie(s : string) -> [InfixExpr] {
 	parsic(infixGrammar, s, specialPegActions);
 }
 
-re2ie(e : [RpnExpr]) -> InfixExpr {
+/* re2ie(e : [RpnExpr]) -> InfixExpr {
   	stack : [InfixExpr] = [];
 	a = fold(e, stack, \st, val -> {
 		switch (val) {
@@ -42,11 +43,12 @@ re2ie(e : [RpnExpr]) -> InfixExpr {
 		}
 	});
 	a[0];
-}
+} */
 
 ie2s(e : InfixExpr, priority : int) -> string {
 	switch (e) {
 		Const(number) : d2s(number);
+		Var(name) : name;
 		BinOp(name, l, r) : {
 			if (name == "+") {
 				retStr = ie2s(l, 2) + "+" + ie2s(r, 2);
@@ -66,6 +68,7 @@ ie2s(e : InfixExpr, priority : int) -> string {
 				"empty";
 			}
 		}
+		Null() : d2s(0.0);
 	}
 }
 
