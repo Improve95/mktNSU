@@ -9,11 +9,11 @@ export {
     infixGrammar = compilePegGrammar("#include labs/block2/arith/infix.lingo");
 
     /* Infix */
-    InfixExpr ::= Const, Var, Frac, /* Unary, */ BinOp, Null;
+    InfixExpr ::= Const, Var, Frac, Unary, BinOp, Null;
 	Const(number : double);
     Var(name : string);
     Frac(left: InfixExpr, right: InfixExpr);
-    // Unary(number : double);
+    Unary(binOp : InfixExpr);
     BinOp(name : string, left: InfixExpr, right: InfixExpr);
     Null();
 }

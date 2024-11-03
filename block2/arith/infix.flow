@@ -21,8 +21,13 @@ s2ie(s : string) -> InfixExpr {
 ie2s(e : InfixExpr, priority : int) -> string {
 	switch (e) {
 		Const(number) : d2s(number);
+
 		Var(name) : name;
+
 		Frac(l, r) : "[" + ie2s(l, 0) + "|" + ie2s(r, 0) + "]";
+
+		Unary(binOp) : "(-" + ie2s(binOp, 0) + ")";
+
 		BinOp(name, l, r) : {
 			if (name == "+") {
 				retStr = ie2s(l, 1) + "+" + ie2s(r, 1);
@@ -72,6 +77,8 @@ calcIe(e : InfixExpr, vars : Tree<string, double>) -> double {
 		}
 
 		Frac(l, r) : calcIe(l, vars) / calcIe(r, vars);
+
+		Unary(binOp) : calcIe(binOp, vars);
 
 		BinOp(name, l, r) : {
 			if (name == "+") {

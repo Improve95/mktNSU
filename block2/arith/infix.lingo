@@ -6,13 +6,12 @@ rsub = ws "-" ws mul:val ws { :val };
 mul = ws div:l ws rmul+:r { buildOp("*", :l, :r) } | div;
 rmul = ws "*" ws div:val ws { :val };
 
-div = ws atom:l ws rdiv+:r { buildOp("/", :l, :r) } | atom;
-rdiv = ws "/" ws atom:val ws { :val };
+div = ws unary:l ws rdiv+:r { buildOp("/", :l, :r) } | unary;
+rdiv = ws "/" ws unary:val ws { :val };
 
-unary = ws atom:val ws { :val } | ws "-" atom:val ws { Unary(:val) };
+unary = ws atom:val ws { :val } | ws "-" atom:val ws { BinOp("*", :val, Const(s2d("-1"))) };
 
-atom = ws const:val ws { :val } | ws var:val ws { :val } 
-    | ws frac:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
+atom = ws const:val ws { :val } | ws var:val ws { :val } | ws frac:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 
 expr = ws sum:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 
