@@ -4,12 +4,14 @@ import labs/block2/arith/exprDecl;
 	s2ie - string to infix expression
 	ie2s - infix expression to string
 	calcIe - calculate infix expression
+	ie2sie - infix expression to simple infix expression (ie2sie)
  */
 
 export {
 	s2ie(s : string) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
   	calcIe(e : InfixExpr, vars : Tree<string, double>) -> double;
+	ie2sie(e : InfixExpr) -> InfixExpr;
 }
 
 buildOp(xs : [flow]) {
@@ -89,6 +91,148 @@ containsVar(e: InfixExpr, difVar : InfixExpr) -> bool {
 			} else {
 				false;
 			}
+	}
+}
+
+equals(l : InfixExpr, r : InfixExpr) -> bool {
+	switch (l) {
+		BinOp(name1, l1, r1): {
+			if (name1 == "+") {
+				switch (r) {
+					BinOp(name2, l2, r2):
+						if (name2 == "+" && ((equals(l1, l2) && equals(r1, r2)) || (equals(l1, r2) && equals(r1, l2)))) {
+							true;
+						} else {
+							false;
+						}
+					default: false;
+				}
+			} else if (name1 == "*") {
+				switch (r) {
+					BinOp(name2, l2, r2):
+						if (name2 == "*" && ((equals(l1, l2) && equals(r1, r2)) || (equals(l1, r2) && equals(r1, l2)))) {
+							true;
+						} else {
+							false;
+						}
+					default: false;
+				}
+			} else {
+				if (l == r) {
+					true;
+				} else {
+					false;
+				}
+			}
+		}
+		default:
+			switch (r) {
+				default:
+					if (l == r) {
+						true;
+					} else {
+						false;
+					}
+			}
+	}
+}
+
+ie2sie(e : InfixExpr) -> InfixExpr {
+	simp_ex = switch(e) {
+		BinOp(name, l, r):
+			if (name == "+") {
+				simp_l = ie2sie(l);
+				simp_r = ie2sie(r);
+				if (simp_l == Const(0.0)) {
+					simp_r;
+				} else if (simp_r == Const(0.0)) {
+					simp_l;
+				} else if (equals(simp_l, simp_r)) {
+					BinOp("*", Const(2.0), simp_l);
+				} else if (simp_l.structname == "BinOp" && simp_r.structname == "BinOp") {
+					switch (simp_l) {
+						BinOp(name1, l1, r1):
+							switch (simp_r) {
+								BinOp(name2, l2, r2):
+									if (name1 == "*" && name2 == "*") {
+										if (equals(l1, l2)) {
+											BinOp("*", l1, BinOp("+", r1, r2));
+										} else if ( equals(r1, r2)) {
+											BinOp("*", r1, BinOp("+", l1, l2));
+										} else if ( equals(l1, r2)) {
+											BinOp("*", l1, BinOp("+", r1, l2));
+										} else if ( equals(r1, l2)) {
+											BinOp("*", r1, BinOp("+", l1, r2));
+										} else {
+											BinOp(name, simp_l, simp_r);
+										}
+									} else {
+										BinOp(name, simp_l, simp_r);
+									}
+								default: BinOp(name, simp_l, simp_r);
+							}
+						default: BinOp(name, simp_l, simp_r);
+					}
+				} else {
+					BinOp(name, simp_l, simp_r);
+				}
+			} else if (name == "*") {
+				simp_l = ie2sie(l);
+				simp_r = ie2sie(r);
+				if (simp_l == Const(0.0) || simp_r == Const(0.0)) {
+					Const(0.0);
+				} else if (simp_l == Const(1.0)) {
+					simp_r;
+				} else if (simp_r == Const(1.0)) {
+					simp_l;
+				} else if (equals(simp_l, simp_r)) {
+					BinOp("^", simp_l, Const(2.0));
+				} else {
+					BinOp(name, simp_l, simp_r);
+				}
+			} else if (name == "/") {
+				simp_l = ie2sie(l);
+				simp_r = ie2sie(r);
+				if (simp_l == Const(0.0)) {
+					Const(0.0);
+				} elseif (equals(simp_l, simp_r)) {
+					Const(1.0);
+				} else {
+					BinOp(name, simp_l, simp_r);
+				}
+			} else if (name == "^") {
+				simp_l = ie2sie(l);
+				simp_r = ie2sie(r);
+				if (simp_r == Const(0.0)) {
+					Const(1.0);
+				} else if (simp_l == Const(0.0)) {
+					Const(0.0);
+				} else {
+					BinOp(name, simp_l, simp_r);
+				}
+			} else if (name == "'") {
+				ie2sie(takeDerivative(l, r));
+			} else {
+				simp_l = ie2sie(l);
+				simp_r = ie2sie(r);
+				if (equals(simp_l, simp_r)) {
+					Const(0.0);
+				} else if (simp_r == Const(0.0)) {
+					simp_l;
+				} else {
+					BinOp(name, simp_l, simp_r);
+				}
+			}
+
+		Log(ex2): Log(ie2sie(ex2));
+
+		default: e;
+	}
+	
+	if (simp_ex == e) {
+		simp_ex;
+	} else {
+		ie2sie(simp_ex);
 	}
 }
 

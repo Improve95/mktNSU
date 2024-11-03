@@ -9,16 +9,24 @@ inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, doubl
 main() {
     vars = ["a", "x"];
     values = [5.0, 4.0];
-    expr : string = "d/dx(x^2)";
+    expr : string = "d/dx(x^2) + 0 + 32 * 1";
 
     ie = s2ie(expr);
     println(ie);
+    println(ie2s(ie, 0));
+
+    println("");
+
+    simpleIe = ie2sie(ie);
+    println(simpleIe);
+    println(ie2s(simpleIe, 0));
 
     varsValues = inputVariablesIntoTree(vars, values);
-    result = calcIe(ie, varsValues);
+    result1 = calcIe(ie, varsValues);
+    result2 = calcIe(simpleIe, varsValues);
 
-    println(ie2s(ie, 0));
-    println(result);
+    println(result1);
+    println(result2);
 
     quit(0);
 }
