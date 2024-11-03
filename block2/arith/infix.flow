@@ -11,11 +11,27 @@ export {
 	s2ie(s : string) -> [InfixExpr];
   	re2ie(e : [RpnExpr]) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
-  	calcIe(e : InfixExpr) -> int;
+  	calcIe(e : InfixExpr) -> double;
+}
+
+arithGrammarOp : ref Maybe<[PegOp]> = ref None();
+
+arithGrammar() {
+    onlyOnce(arithGrammarOp, \ -> {
+        compilePegGrammar("#include infix.lingo");
+    });
+}
+
+buildOp(xs : [flow]) {
+	fold(xs[2], xs[1], \acc, x -> BinOp(xs[0], acc, x));
 }
 
 s2ie(s : string) -> [InfixExpr] {
-	parsic(infixGrammar, s, defaultPegActions);
+	specialPegActions = {
+		t1 = setTree(defaultPegActions.t, "buildOp", buildOp);
+		SemanticActions(t1);
+	}
+	parsic(arithGrammar(), s, specialPegActions);
 }
 
 re2ie(e : [RpnExpr]) -> InfixExpr {
@@ -25,9 +41,9 @@ re2ie(e : [RpnExpr]) -> InfixExpr {
 			Const(c):
 				arrayPush(st, Const(c));
 			OpName(name): {
-				right = lastElement(st, Const(0));
+				right = lastElement(st, Const(0.0));
 				a = removeIndex(st, length(st) - 1);
-				left = lastElement(a, Const(0));
+				left = lastElement(a, Const(0.0));
 				b = removeIndex(a, length(a) - 1);
 				arrayPush(b, BinOp(name, left, right));
 			}
@@ -38,7 +54,7 @@ re2ie(e : [RpnExpr]) -> InfixExpr {
 
 ie2s(e : InfixExpr, priority : int) -> string {
 	switch (e) {
-		Const(number) : i2s(number);
+		Const(number) : d2s(number);
 		BinOp(name, l, r) : {
 			if (name == "+") {
 				retStr = ie2s(l, 2) + "+" + ie2s(r, 2);
@@ -61,7 +77,7 @@ ie2s(e : InfixExpr, priority : int) -> string {
 	}
 }
 
-calcIe(e : InfixExpr) -> int {
+calcIe(e : InfixExpr) -> double {
 	switch (e) {
 		Const(number) : number;
 		BinOp(name, l, r) : {
@@ -70,7 +86,7 @@ calcIe(e : InfixExpr) -> int {
 			} else if (name == "*") {
 				calcIe(l) * calcIe(r);
 			} else {
-				0;
+				0.0;
 			}
 		} 
 	}

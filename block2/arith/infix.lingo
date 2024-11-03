@@ -1,24 +1,22 @@
 add = ws sub:left ws "+" ws add:right ws { BinOp("+", :left, :right) } | sub;
 
-sub = ws mul:left ws rsub+:right ws { BinOp("-", :left, :right) } | mul;
+sub = ws mul:left ws rsub+:right ws { buildOp("-", :left, :right) } | mul;
 rsub = ws "-" ws mul:val ws { :val };
 
-mul = ws div:left ws rmul+:right { BinOp("*", :left, :right) } | div;
+mul = ws div:left ws rmul+:right { buildOp("*", :left, :right) } | div;
 rmul = ws "*" ws div:val ws { :val };
 
-div = ws pow:left ws rdiv+:right { BinOp("/", :left, :right) } | pow;
+div = ws pow:left ws rdiv+:right { buildOp("/", :left, :right) } | pow;
 rdiv = ws "/" ws pow:val ws { :val };
 
-pow = ws dif:left ws rpow+:right { BinOp("^", :left, :right) } | dif;
+pow = ws dif:left ws rpow+:right { buildOp("^", :left, :right) } | dif;
 rpow = ws "^" ws dif:val ws { :val };
 
-dif = ws "d/d" var:val ws "(" ws add:ex ws ")" ws { BinOp("'", :ex, :val) } | log;
-
-log = ws "log" ws add:ex ws { Log(:ex) } | atom;
+dif = ws "d/d" var:val ws "(" ws add:ex ws ")" ws { BinOp("'", :ex, :val) } | atom;
 
 atom = ws const:val ws { :val } | ws var:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 expr = ws add:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 
-const = ('0'-'9')+$d { Const(s2i($d)) };
+const = ('0'-'9')+$d { Const(s2d($d)) };
 var = ('a' - 'z')+$name { Var($name) };
 ws = (' '|'\r'|'\n'|'\t')*;

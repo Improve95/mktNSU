@@ -6,13 +6,12 @@ import fs/filesystem;
 
 export {
     /* lingo */
-    infixGrammar = compilePegGrammar("#include infix.lingo");
     postfixGrammar = compilePegGrammar("#include postfix.lingo");
 
     /* Infix */
     InfixExpr ::= Const, BinOp;
     BinOp(name : string, left: InfixExpr, right: InfixExpr);
-	Const(i : int);
+	Const(i : double);
 
     /* Postfix */
     RpnExpr ::= Const, OpName;
