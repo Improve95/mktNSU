@@ -1,4 +1,4 @@
-import exprDecl;
+import labs/block2/arith/exprDecl;
 
 /* 
 	s2ie - string to infix expression
@@ -18,7 +18,7 @@ arithGrammarOp : ref Maybe<[PegOp]> = ref None();
 
 arithGrammar() {
     onlyOnce(arithGrammarOp, \ -> {
-        compilePegGrammar("#include infix.lingo");
+        compilePegGrammar("#include labs/block2/arith/infix.lingo");
     });
 }
 

@@ -1,9 +1,7 @@
-import postfix;
+import labs/block2/arith/postfix;
 
 main() {
-    str : string = getUrlParameter("expr");
-
-    println(s2ie(str));
+    println(s2ie("7 + 8"));
 
     quit(0);
 }
