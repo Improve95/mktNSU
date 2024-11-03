@@ -11,15 +11,7 @@ export {
 	s2ie(s : string) -> [InfixExpr];
   	re2ie(e : [RpnExpr]) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
-  	calcIe(e : InfixExpr) -> double;
-}
-
-arithGrammarOp : ref Maybe<[PegOp]> = ref None();
-
-arithGrammar() {
-    onlyOnce(arithGrammarOp, \ -> {
-        compilePegGrammar("#include labs/block2/arith/infix.lingo");
-    });
+  	calcIe(e : InfixExpr, vars : Tree<string, double>) -> double;
 }
 
 buildOp(xs : [flow]) {
@@ -31,7 +23,7 @@ s2ie(s : string) -> [InfixExpr] {
 		t1 = setTree(defaultPegActions.t, "buildOp", buildOp);
 		SemanticActions(t1);
 	}
-	parsic(arithGrammar(), s, specialPegActions);
+	parsic(infixGrammar, s, specialPegActions);
 }
 
 re2ie(e : [RpnExpr]) -> InfixExpr {
@@ -77,17 +69,31 @@ ie2s(e : InfixExpr, priority : int) -> string {
 	}
 }
 
-calcIe(e : InfixExpr) -> double {
+calcIe(e : InfixExpr, vars : Tree<string, double>) -> double {
 	switch (e) {
 		Const(number) : number;
+
+		Var(name) : {
+			switch (lookupTree(vars, name)) {
+				Some(number): number;
+				None(): 0.0;
+			}
+		}
+
 		BinOp(name, l, r) : {
 			if (name == "+") {
-				calcIe(l) + calcIe(r);
+				calcIe(l, vars) + calcIe(r, vars);
+			} else if (name == "-") {
+				calcIe(l, vars) - calcIe(r, vars);
 			} else if (name == "*") {
-				calcIe(l) * calcIe(r);
+				calcIe(l, vars) * calcIe(r, vars);
+			} else if (name == "/") {
+				calcIe(l, vars) / calcIe(r, vars);
 			} else {
 				0.0;
 			}
 		} 
+
+		Null() : 0.0;
 	}
 }
