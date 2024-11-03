@@ -10,7 +10,7 @@ main() {
     vars = ["a", "b"];
     values = [5.0, 4.0];
     // expr : string = "(7 + 8) + [(2 + 2) / 2 | 2]";
-    expr : string = "(7 + 8) - -(1 + 2)";
+    expr : string = "(7 + 8) - -2";
 
     ie = s2ie(expr);
     println(ie);
