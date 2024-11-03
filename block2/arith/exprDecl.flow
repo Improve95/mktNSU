@@ -7,7 +7,6 @@ import fs/filesystem;
 export {
     /* lingo */
     infixGrammar = compilePegGrammar("#include labs/block2/arith/infix.lingo");
-    postfixGrammar = compilePegGrammar("#include labs/block2/arith/postfix.lingo");
 
     /* Infix */
     InfixExpr ::= Const, Var, BinOp, Null;

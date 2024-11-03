@@ -24,7 +24,14 @@ ie2s(e : InfixExpr, priority : int) -> string {
 		Var(name) : name;
 		BinOp(name, l, r) : {
 			if (name == "+") {
-				retStr = ie2s(l, 2) + "+" + ie2s(r, 2);
+				retStr = ie2s(l, 1) + "+" + ie2s(r, 1);
+				if (priority > 1) {
+					"(" + retStr + ")";
+				} else {
+					retStr;
+				}
+			} else if (name == "-") {
+				retStr = ie2s(l, 1) + "*-" + ie2s(r, 1);
 				if (priority > 1) {
 					"(" + retStr + ")";
 				} else {
@@ -32,7 +39,14 @@ ie2s(e : InfixExpr, priority : int) -> string {
 				}
 			} else if (name == "*") {
 				retStr = ie2s(l, 2) + "*" + ie2s(r, 2);
-				if (priority > 1) {
+				if (priority > 2) {
+					"(" + retStr + ")";
+				} else {
+					retStr;
+				}
+			} else if (name == "/") {
+				retStr = ie2s(l, 2) + "/" + ie2s(r, 2);
+				if (priority > 2) {
 					"(" + retStr + ")";
 				} else {
 					retStr;
