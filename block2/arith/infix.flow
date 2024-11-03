@@ -1,5 +1,11 @@
 import labs/block2/arith/exprDecl;
 
+/* 
+	s2ie - string to infix expression
+	ie2s - infix expression to string
+	calcIe - calculate infix expression
+ */
+
 export {
 	s2ie(s : string) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
