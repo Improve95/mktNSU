@@ -1,0 +1,24 @@
+import labs/block2/arith/infix;
+
+inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, double> {
+    foldi(vars, makeTree(), \i, tree, variable -> {
+        setTree(tree, variable, values[i])
+    });
+}
+
+main() {
+    vars = ["a", "b"];
+    values = [5.0, 4.0];
+    expr : string = "2^6";
+
+    ie = s2ie(expr);
+    println(ie);
+
+    // varsValues = inputVariablesIntoTree(vars, values);
+    // result = calcIe(ie, varsValues);
+
+    println(ie2s(ie, 0));
+    // println(result);
+
+    quit(0);
+}

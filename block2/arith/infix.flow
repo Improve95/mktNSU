@@ -1,5 +1,11 @@
 import labs/block2/arith/exprDecl;
 
+/* 
+	s2ie - string to infix expression
+	ie2s - infix expression to string
+	calcIe - calculate infix expression
+ */
+
 export {
 	s2ie(s : string) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
@@ -59,11 +65,65 @@ ie2s(e : InfixExpr, priority : int) -> string {
 				} else {
 					retStr;
 				}
+			} else if (name == "^") {
+				ie2s(l, 2) + "^" + ie2s(r, 2);
+			} else if (name == "'") {
+				"d/d" + ie2s(r, 0) + "(" + ie2s(l, 0) + ")";	
 			} else {
 				"empty";
 			}
 		}
 		Null() : d2s(0.0);
+	}
+}
+
+containsVar(e: InfixExpr, difVar : InfixExpr) -> bool {
+	switch (e) {
+		BinOp(name, l, r): containsVar(l, difVar) || containsVar(r, difVar);
+
+		default:
+			if (e == difVar) {
+				true;
+			} else {
+				false;
+			}
+	}
+}
+
+takeDerivative(e : InfixExpr, difVar : InfixExpr) -> InfixExpr {
+	switch (e) {
+		BinOp(name, l, r) : {
+			if (name == "+") {
+				BinOp("+", takeDerivative(l, difVar), takeDerivative(r, difVar));
+			} else if (name == "-") {
+				BinOp("-", takeDerivative(l, difVar), takeDerivative(r, difVar));
+			} else if (name == "*") {
+				BinOp("+", BinOp("*", takeDerivative(l, difVar), r), BinOp("*", l, takeDerivative(r, difVar)));
+			} else if (name == "/") {
+				BinOp("/", 
+					BinOp("-", BinOp("*", takeDerivative(l, difVar), r), BinOp("*", l, takeDerivative(r, difVar))), 
+					BinOp("^", r, Const(2.0)));
+			} else if (name == "^") {
+				if (containsVar(l, difVar)) {
+					if (!containsVar(r, difVar)) {
+						BinOp("*", BinOp("*", r, BinOp("^", l, BinOp("-", r, Const(1.0)))), takeDerivative(l, difVar));
+					} else {
+						Null();
+					}
+				} else {
+					BinOp("*", BinOp("*", BinOp("^", l, r), Log(l)), takeDerivative(r, difVar));
+				}
+			} else {
+				takeDerivative(takeDerivative(l, r), r);
+			};
+		}
+		default: {
+			if (e == difVar) {
+				Const(1.0);
+			} else {
+				Const(0.0);
+			}
+		}
 	}
 }
 
@@ -91,6 +151,10 @@ calcIe(e : InfixExpr, vars : Tree<string, double>) -> double {
 				calcIe(l, vars) * calcIe(r, vars);
 			} else if (name == "/") {
 				calcIe(l, vars) / calcIe(r, vars);
+			} else if (name == "^") {
+				dpow(calcIe(l, vars), calcIe(r, vars));
+			} else if (name == "'") {
+				calcIe(takeDerivative(l, r), vars);
 			} else {
 				0.0;
 			}
