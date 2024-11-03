@@ -9,9 +9,14 @@ rmul = ws "*" ws div:val ws { :val };
 div = ws atom:l ws rdiv+:r { buildOp("/", :l, :r) } | atom;
 rdiv = ws "/" ws atom:val ws { :val };
 
-atom = ws const:val ws { :val } | ws var:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
+unary = ws atom:val ws { :val } | ws "-" atom:val ws { Unary(:val) };
+
+atom = ws const:val ws { :val } | ws var:val ws { :val } 
+    | ws frac:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
+
 expr = ws sum:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 
+frac = "[" ws expr:l ws "|" ws expr:r ws "]" ws { Frac(:l, :r) };
 const = ('0'-'9')+$d { Const(s2d($d)) };
 var = ('a' - 'z')+$name { Var($name) };
 ws = (' '|'\r'|'\n'|'\t')*;

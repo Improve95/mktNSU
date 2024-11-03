@@ -22,6 +22,7 @@ ie2s(e : InfixExpr, priority : int) -> string {
 	switch (e) {
 		Const(number) : d2s(number);
 		Var(name) : name;
+		Frac(l, r) : "[" + ie2s(l, 0) + "|" + ie2s(r, 0) + "]";
 		BinOp(name, l, r) : {
 			if (name == "+") {
 				retStr = ie2s(l, 1) + "+" + ie2s(r, 1);
@@ -39,14 +40,14 @@ ie2s(e : InfixExpr, priority : int) -> string {
 				}
 			} else if (name == "*") {
 				retStr = ie2s(l, 2) + "*" + ie2s(r, 2);
-				if (priority > 2) {
+				if (priority >= 2) {
 					"(" + retStr + ")";
 				} else {
 					retStr;
 				}
 			} else if (name == "/") {
 				retStr = ie2s(l, 2) + "/" + ie2s(r, 2);
-				if (priority > 2) {
+				if (priority >= 2) {
 					"(" + retStr + ")";
 				} else {
 					retStr;
@@ -69,6 +70,8 @@ calcIe(e : InfixExpr, vars : Tree<string, double>) -> double {
 				None(): 0.0;
 			}
 		}
+
+		Frac(l, r) : calcIe(l, vars) / calcIe(r, vars);
 
 		BinOp(name, l, r) : {
 			if (name == "+") {

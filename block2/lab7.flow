@@ -9,7 +9,7 @@ inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, doubl
 main() {
     vars = ["a", "b"];
     values = [5.0, 4.0];
-    expr : string = "(7 + 8) * b + a";
+    expr : string = "(7 + 8) + [(2 + 2) / 2 | 2]";
 
     ie = s2ie(expr);
     println(ie);
