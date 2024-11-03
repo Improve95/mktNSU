@@ -1,16 +1,7 @@
-// import labs/block2/arith/infix;
 import labs/block2/arith/exprDecl;
-
-/* 
-	s2ie - string to infix expression
-  	re2ie - rpn expression to infix expression
-	ie2s - infix expression to string
-  	calIe - calculate infix expression
-*/
 
 export {
 	s2ie(s : string) -> InfixExpr;
-  	// re2ie(e : [RpnExpr]) -> InfixExpr;
   	ie2s(e : InfixExpr, priority : int) -> string;
   	calcIe(e : InfixExpr, vars : Tree<string, double>) -> double;
 }
@@ -26,24 +17,6 @@ s2ie(s : string) -> InfixExpr {
 	}
 	parsic(infixGrammar, s, specialPegActions);
 }
-
-/* re2ie(e : [RpnExpr]) -> InfixExpr {
-  	stack : [InfixExpr] = [];
-	a = fold(e, stack, \st, val -> {
-		switch (val) {
-			Const(c):
-				arrayPush(st, Const(c));
-			OpName(name): {
-				right = lastElement(st, Const(0.0));
-				a = removeIndex(st, length(st) - 1);
-				left = lastElement(a, Const(0.0));
-				b = removeIndex(a, length(a) - 1);
-				arrayPush(b, BinOp(name, left, right));
-			}
-		}
-	});
-	a[0];
-} */
 
 ie2s(e : InfixExpr, priority : int) -> string {
 	switch (e) {

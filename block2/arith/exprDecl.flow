@@ -15,8 +15,4 @@ export {
     Var(name : string);
     BinOp(name : string, left: InfixExpr, right: InfixExpr);
     Null();
-
-    /* Postfix */
-    // RpnExpr ::= Const, OpName;
-    // OpName(op : string);
 }
