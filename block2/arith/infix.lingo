@@ -12,11 +12,11 @@ rdiv = ws "/" ws pow:val ws { :val };
 pow = ws dif:left ws rpow+:right { buildOp("^", :left, :right) } | dif;
 rpow = ws "^" ws dif:val ws { :val };
 
-dif = ws "d/d" var:val ws "(" ws sum:ex ws ")" ws { BinOp("'", :ex, :val) } | unary;
+dif = ws "d/d" var:val ws "(" ws sum:difVar ws ")" ws { BinOp("'", :difVar, :val) } | unary;
 
-unary = ws atom:val ws { :val } | ws "-" atom:val ws { Unary( BinOp("*", :val, Const(s2d("-1"))) ) };
+unary = ws log:val ws { :val } | ws "-" log:val ws { Unary( BinOp("*", :val, Const(s2d("-1"))) ) };
 
-log = ws "log(" ws add:val ws ")" ws { Log(:val) } | atom;
+log = ws "log(" ws sum:val ws ")" ws { Log(:val) } | atom;
 
 atom = ws const:val ws { :val } | ws var:val ws { :val } | ws frac:val ws { :val } | ws "(" ws expr:val ws ")" ws { :val };
 

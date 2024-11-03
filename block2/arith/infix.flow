@@ -34,6 +34,8 @@ ie2s(e : InfixExpr, priority : int) -> string {
 
 		Unary(binOp) : ie2s(binOp, -1);
 
+		Log(ex) : "log(" + ie2s(ex, 0) + ")";
+
 		BinOp(name, l, r) : {
 			if (name == "+") {
 				retStr = ie2s(l, 1) + "+" + ie2s(r, 1);
@@ -117,6 +119,9 @@ takeDerivative(e : InfixExpr, difVar : InfixExpr) -> InfixExpr {
 				takeDerivative(takeDerivative(l, r), r);
 			};
 		}
+
+		Log(ex): BinOp("*", BinOp("/", Const(1.0), ex), takeDerivative(ex, difVar));
+		
 		default: {
 			if (e == difVar) {
 				Const(1.0);
@@ -141,6 +146,8 @@ calcIe(e : InfixExpr, vars : Tree<string, double>) -> double {
 		Frac(l, r) : calcIe(l, vars) / calcIe(r, vars);
 
 		Unary(binOp) : calcIe(binOp, vars);
+
+		Log(ex) : log(calcIe(ex, vars));
 
 		BinOp(name, l, r) : {
 			if (name == "+") {

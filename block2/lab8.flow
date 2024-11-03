@@ -7,18 +7,18 @@ inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, doubl
 }
 
 main() {
-    vars = ["a", "b"];
+    vars = ["a", "x"];
     values = [5.0, 4.0];
-    expr : string = "2^6";
+    expr : string = "d/dx(x^2)";
 
     ie = s2ie(expr);
     println(ie);
 
-    // varsValues = inputVariablesIntoTree(vars, values);
-    // result = calcIe(ie, varsValues);
+    varsValues = inputVariablesIntoTree(vars, values);
+    result = calcIe(ie, varsValues);
 
     println(ie2s(ie, 0));
-    // println(result);
+    println(result);
 
     quit(0);
 }
