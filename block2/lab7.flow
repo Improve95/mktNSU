@@ -11,12 +11,12 @@ main() {
     testRational = "(1 + 4) / -2";
     params = setTreeValues(makeTree(), [Pair("x", ratNum(5, 1))]);
 
-    expRat = parse(testRational);
+    expRat = s2re(testRational);
     println(expRat);
-    println(expr2s(expRat));
+    println(re2s(expRat, 0));
 
-    solveRat = calculateRat(expRat, params);
-    println(ratNum2s(solveRat));
+    solveRat = calcRe(expRat, params);
+    println(reNum2s(solveRat));
 
     quit(0);
 }

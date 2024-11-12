@@ -3,34 +3,30 @@ import lingo/pegcode/driver;
 import ds/tree;
 import math/math;
 
-/*
-Расширьте язык арифметических выражений вычитанием, делением, сменой знака и переменными. 
-Для полученного нового языка алгебраических выражений напишите функцию, 
-которая вычисляет значение выражения при заданных значениях входящих в него переменных, 
-которые могут быть рациональными.
-*/
+/* 
+    s2re - string to rational expression
+    re2s - rational expression to string
+    calcRe - calculate rational
+    reNum2s - rational expresion number to string
+ */
 
 export {
 
-    Expr ::= Sum, Mul, Sub, Div, Const, Var, Neg;
-        Sum : (l : Expr, r : Expr);
-        Mul : (l : Expr, r : Expr);
-        Sub : (l : Expr, r : Expr);
-        Div : (l : Expr, r : Expr);
+    RatExpr ::= Sum, Mul, Sub, Div, Const, Var, Neg;
+        Sum : (l : RatExpr, r : RatExpr);
+        Mul : (l : RatExpr, r : RatExpr);
+        Sub : (l : RatExpr, r : RatExpr);
+        Div : (l : RatExpr, r : RatExpr);
         Var : (var : string);
         Const : (number : int);
-        Neg : (expr : Expr);
+        Neg : (RatExpr : RatExpr);
 
-    ratNum : (numerator : int, denominator : int);
+    ratNum : (n : int, d : int);
 
-    sumRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>)       -> Maybe<ratNum>;
-    subRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>)       -> Maybe<ratNum>;
-    mulRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>)       -> Maybe<ratNum>;
-    divRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>)       -> Maybe<ratNum>;
-    ratNum2s(rat : Maybe<ratNum>)                         -> string;
-    parse(str : string)                                   -> Expr;
-    expr2s(v : Expr)                                      -> string;
-    calculateRat(v : Expr, params : Tree<string, ratNum>) -> Maybe<ratNum>;
+    reNum2s(rat : Maybe<ratNum>) -> string;
+    s2re(str : string) -> RatExpr;
+    re2s(v : RatExpr, priority : int) -> string;
+    calcRe(v : RatExpr, params : Tree<string, ratNum>) -> Maybe<ratNum>;
 }
 
 sumRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> {
@@ -38,8 +34,8 @@ sumRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> {
         newL = either(l, ratNum(0,0));
         newR = either(r, ratNum(0,0));
 
-        nok = lcm(newL.denominator, newR.denominator);
-        newNumerator = nok / newL.denominator * newL.numerator + nok / newR.denominator * newR.numerator;
+        nok = lcm(newL.d, newR.d);
+        newNumerator = nok / newL.d * newL.n + nok / newR.d * newR.n;
         newDenominator = nok;
 
         nod = iabs(gcd(newNumerator, newDenominator));
@@ -54,8 +50,8 @@ subRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> {
         newL = either(l, ratNum(0,0));
         newR = either(r, ratNum(0,0));
 
-        nok = lcm(newL.denominator, newR.denominator);
-        newNumerator = nok / newL.denominator * newL.numerator - nok / newR.denominator * newR.numerator;
+        nok = lcm(newL.d, newR.d);
+        newNumerator = nok / newL.d * newL.n - nok / newR.d * newR.n;
         newDenominator = nok;
 
         nod = iabs(gcd(newNumerator, newDenominator));
@@ -70,10 +66,10 @@ mulRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B * C/D
         newL = either(l, ratNum(0,0));
         newR = either(r, ratNum(0,0));
 
-        nodAD = iabs(gcd(newL.numerator, newR.denominator));
-        nodBC = iabs(gcd(newL.denominator, newR.numerator));
-        newNumerator = newL.numerator / nodAD * newR.numerator / nodBC;
-        newDenominator = newL.denominator / nodBC * newR.denominator / nodAD;
+        nodAD = iabs(gcd(newL.n, newR.d));
+        nodBC = iabs(gcd(newL.d, newR.n));
+        newNumerator = newL.n / nodAD * newR.n / nodBC;
+        newDenominator = newL.d / nodBC * newR.d / nodAD;
 
         nod = iabs(gcd(newNumerator, newDenominator));
         Some(ratNum(newNumerator / nod, newDenominator / nod));
@@ -87,10 +83,10 @@ divRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B / C/D
         newL = either(l, ratNum(0,0));
         newR = either(r, ratNum(0,0));
 
-        nodAC = iabs(gcd(newL.numerator, newR.numerator));
-        nodBD = iabs(gcd(newL.denominator, newR.denominator));
-        newNumerator = newL.numerator / nodAC * newR.denominator / nodBD;
-        newDenominator = newL.denominator / nodBD * newR.numerator / nodAC;
+        nodAC = iabs(gcd(newL.n, newR.n));
+        nodBD = iabs(gcd(newL.d, newR.d));
+        newNumerator = newL.n / nodAC * newR.d / nodBD;
+        newDenominator = newL.d / nodBD * newR.n / nodAC;
 
         if (newDenominator == 0) {
             println("Division by zero...");
@@ -104,12 +100,12 @@ divRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B / C/D
     }
 }
 
-ratNum2s(rat : Maybe<ratNum>) -> string {
+reNum2s(rat : Maybe<ratNum>) -> string {
     if (isSome(rat)) {
         newRat = either(rat, ratNum(0,0));
-        if (newRat.denominator == 0) "Division by zero..."
-        else if (newRat.denominator == 1) i2s(newRat.numerator)
-        else i2s(newRat.numerator) + "/" + i2s(newRat.denominator);
+        if (newRat.d == 0) "Division by zero..."
+        else if (newRat.d == 1) i2s(newRat.n)
+        else i2s(newRat.n) + "/" + i2s(newRat.d);
     } else {
         "Calculate error...";
     }
@@ -122,30 +118,66 @@ buildDiv(xs : [flow]) {
 	fold(xs[1], xs[0], \acc, x -> Div(acc, x));
 }
 
-parse(str : string) -> Expr {
+s2re(str : string) -> RatExpr {
     grammar = "#include labs/block2/rational/rational.lingo";
-    parsic(compilePegGrammar(grammar), str, );
+    parsic(compilePegGrammar(grammar), str, pegActions(
+        [
+            Pair("buildSub", buildSub),
+            Pair("buildDiv", buildDiv)
+        ]
+    ));
 }
 
-expr2s(v : Expr) -> string {
+re2s(v : RatExpr, priority : int) -> string {
     switch (v) {
-		Mul(a, b) : "(" + expr2s(a) + "*" + expr2s(b) + ")";
-		Sum(a, b) : "(" + expr2s(a) + "+" + expr2s(b) + ")";
-        Div(a, b) : "(" + expr2s(a) + "/" + expr2s(b) + ")";
-        Sub(a, b) : "(" + expr2s(a) + "-" + expr2s(b) + ")";
-        Neg(a)    : "(-" + expr2s(a) + ")";
-        Const(a)    : i2s(a);
-        Var(a)    : a;
+        Var(a) : a;
+
+        Const(a) : i2s(a);
+
+        Neg(a) : "-" + re2s(a, 0);
+
+		Sum(a, b) : {
+            retStr = re2s(a, 1) + "+" + re2s(b, 1);
+            if (priority > 1) {
+                "(" + retStr + ")";
+            } else {
+                retStr
+            }
+        }
+        Sub(a, b) : {
+            retStr = re2s(a, 1) + "-" + re2s(b, 1);
+            if (priority > 1) {
+                "(" + retStr + ")";
+            } else {
+                retStr
+            }
+        }
+		Mul(a, b) : {
+            retStr = re2s(a, 2) + "*" + re2s(b, 2);
+            if (priority > 2) {
+                "(" + retStr + ")";
+            } else {
+                retStr
+            }
+        }
+        Div(a, b) : {
+            retStr = re2s(a, 2) + "/" + re2s(b, 2);
+            if (priority > 2) {
+                "(" + retStr + ")";
+            } else {
+                retStr
+            }
+        }
 	}
 }
 
-calculateRat(v : Expr, params : Tree<string, ratNum>) -> Maybe<ratNum> {
+calcRe(v : RatExpr, params : Tree<string, ratNum>) -> Maybe<ratNum> {
     switch (v) {
-        Sum(a, b) : sumRatNum(calculateRat(a, params), calculateRat(b, params));
-        Mul(a, b) : mulRatNum(calculateRat(a, params), calculateRat(b, params));
-        Div(a, b) : divRatNum(calculateRat(a, params), calculateRat(b, params));
-        Sub(a, b) : subRatNum(calculateRat(a, params), calculateRat(b, params));
-        Neg(a)    : mulRatNum(Some(ratNum(-1, 1)), calculateRat(a, params)); 
+        Sum(a, b) : sumRatNum(calcRe(a, params), calcRe(b, params));
+        Mul(a, b) : mulRatNum(calcRe(a, params), calcRe(b, params));
+        Div(a, b) : divRatNum(calcRe(a, params), calcRe(b, params));
+        Sub(a, b) : subRatNum(calcRe(a, params), calcRe(b, params));
+        Neg(a)    : mulRatNum(Some(ratNum(-1, 1)), calcRe(a, params)); 
         Const(a)    : Some(ratNum(a, 1));
         Var(a)    : lookupTree(params, a);
     }
