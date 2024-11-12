@@ -8,10 +8,11 @@ inputVariablesIntoTree(vars : [string], values : [double]) -> Tree<string, doubl
 
 main() {
     // testRational = "- ((((5 * 3) / (4 * 2)) / 3) * a)";
-    testRational = "(1/(x-(2/4)))";
+    testRational = "(1 + 4) / -2";
     params = setTreeValues(makeTree(), [Pair("x", ratNum(5, 1))]);
 
     expRat = parse(testRational);
+    println(expRat);
     println(expr2s(expRat));
 
     solveRat = calculateRat(expRat, params);

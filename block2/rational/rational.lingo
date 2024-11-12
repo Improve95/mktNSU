@@ -1,14 +1,19 @@
-S = summ | multiply | substracion | division | int | var | negative;
+sum = ws sub:l ws "+" ws sum:r ws { Sum(:l, :r) } | sub;
 
-summ = "(" ws S:l ws "+" ws S:r ws ")"        { Sum(:l, :r) };
-multiply = "(" ws S:l ws "*" ws S:r ws ")"    { Mul(:l, :r) };
-substracion = "(" ws S:l ws "-" ws S:r ws ")" { Sub(:l, :r) };
-division = "(" ws S:l ws "/" ws S:r ws ")"    { Div(:l, :r) };
-negative = ws "-" ws S:v ws                   { Neg(:v) };
+sub = ws mul:l ws rsub+:r ws { buildSub(:l, :r) } | mul;
+rsub = ws '-' ws mul:e ws { :e };
 
-int = digit+ $s   { Int( s2i($s) ) };
-var = letter+ $s  { Var( $s ) };
+mul = ws div:l ws "*" ws mul:r ws { Mul(:l, :r) } | div;
 
-digit = '0' - '9';
-letter = 'a' - 'z';
-ws = (' ' | '\t' | '\n' | '\r')*;
+div = unary:l ws rdiv+:r ws { buildDiv(:l, :r) } | unary;
+rdiv = ws '/' ws unary:e ws { :e };
+
+unary = ws '-' ws staples:e ws { Neg(:e) } | staples;
+
+staples = ws atom:e ws { :e } | ws '(' ws sum:e ws ')' ws { :e };
+
+atom = ws const:e ws { :e } | ws var ws { :e };
+
+const = ('0'-'9')+$d ws { Const(s2i($d)) };
+var = ('a'-'z')+$name { Var($name) };
+ws = (' ' | '\r' | '\n' | '\t')*;
