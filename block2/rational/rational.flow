@@ -124,12 +124,7 @@ buildDiv(xs : [flow]) {
 
 parse(str : string) -> Expr {
     grammar = "#include labs/block2/rational/rational.lingo";
-    parsic(compilePegGrammar(grammar), str, pegActions(
-            [
-                Pair("buildSub", buildSub),
-                Pair("buildDiv", buildDiv)
-            ]
-        ));
+    parsic(compilePegGrammar(grammar), str, );
 }
 
 expr2s(v : Expr) -> string {
