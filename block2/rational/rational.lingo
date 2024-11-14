@@ -12,7 +12,7 @@ unary = ws '-' ws staples:e ws { Neg(:e) } | staples;
 
 staples = ws atom:e ws { :e } | ws '(' ws sum:e ws ')' ws { :e };
 
-atom = ws const:e ws { :e } | ws var ws { :e };
+atom = ws const:e ws { :e } | ws var:e ws { :e };
 
 const = ('0'-'9')+$d ws { Const(s2i($d)) };
 var = ('a'-'z')+$name { Var($name) };

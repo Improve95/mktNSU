@@ -11,7 +11,6 @@ import math/math;
  */
 
 export {
-
     RatExpr ::= Sum, Mul, Sub, Div, Const, Var, Neg;
         Sum : (l : RatExpr, r : RatExpr);
         Mul : (l : RatExpr, r : RatExpr);
@@ -178,7 +177,7 @@ calcRe(v : RatExpr, params : Tree<string, ratNum>) -> Maybe<ratNum> {
         Div(a, b) : divRatNum(calcRe(a, params), calcRe(b, params));
         Sub(a, b) : subRatNum(calcRe(a, params), calcRe(b, params));
         Neg(a)    : mulRatNum(Some(ratNum(-1, 1)), calcRe(a, params)); 
-        Const(a)    : Some(ratNum(a, 1));
+        Const(a)  : Some(ratNum(a, 1));
         Var(a)    : lookupTree(params, a);
     }
 }
