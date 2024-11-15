@@ -1,32 +1,17 @@
-import labs/block2/rational/polynomRatSimple;
+import labs/block2/rational/polynomRatSimpleV2;
 
 main() {
-    testNum = "x + y + z + y";
-    // testNum = "-(x * x * x * x) - y * y * y * y";
-    // testNum = "(((z * (x * x)) + (z * (2*(x*y)))) + (z * (y*y)))";
-    // testNum = "((z*z)-(1*1))";
-    // testDen = "(((z*z) + (2*(z*1))) + (1*1))";
-    println("str: " + testNum);
+    expr1 = s2re("c*x + d*x");
+    expr2 = s2re("x + x");
+    
+    res = simplifyExprByRules(expr2, 
+    [
+        convertToRule("x + y", "y + x"),
+        convertToRule("x + y + z", "y + z + x"),
+        convertToRule("x + x", "2 * x")
+    ]);
 
-    testDen = "1";
-    polynom = ratPolynom(s2re(testNum), s2re(testDen));
-    println("func: " + ratPolynom2s(Some(polynom)));
+    println(re2s(res, 0));
 
-    simpl = simplificationByIdentities(polynom,
-        [
-            Pair("x + y + z", "y + z + x")
-        //  Pair("((x*x)-(y*y))", "((x-y)*(x+y))"),
-        //  Pair("(((x*x)+(2*(x*y)))+(y*y))", "((x+y)*(x+y))"),
-        //  Pair("((x*y)+(x*z))", "(x*(y+z))"),
-        //  Pair("(x/x)", "1"),
-        //  Pair("((x*y)/x)", "y"),
-        //  Pair("((y*x)/x)", "y"),
-        //  Pair("((x*y)/(x*z))", "(y/z)"),
-        //  Pair("((x*y)/(z*x))", "(y/z)"),
-        //  Pair("((y*x)/(x*z))", "(y/z)"),
-        //  Pair("((y*x)/(z*x))", "(y/z)")
-        ]);
-    println("simpl: " + ratPolynom2s(Some(simpl)));
-
-    quit(0);
+    quit(0); 
 }

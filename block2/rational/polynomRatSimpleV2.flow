@@ -1,0 +1,260 @@
+import labs/block2/rational/polynomRat;
+
+export {
+    simplifyExprByRules(e : RatExpr, rules : [RuleExpr]) -> RatExpr;
+    convertToRule(left : string, right : string) -> RuleExpr;
+
+    RuleExpr(l : RatExpr, r : RatExpr);
+}
+
+/* yes 2 */ 
+MatchingResult(vars : Tree<string, RatExpr>, match : bool);
+
+/* yes 2 */ 
+isMatchRule(e : RatExpr, rule : RatExpr, vars : Tree<string, RatExpr>) -> MatchingResult {
+    switch(rule) {
+        Mul(lr, rr) : {
+            switch(e) {
+                Mul(le, re) : {
+                    res = isMatchRule(le, lr, vars);
+                    if (res.match) {
+                        isMatchRule(re, rr, res.vars);
+                    } else {
+                        res;
+                    }
+                }
+                default : MatchingResult(vars, false);
+            }
+        }
+        Div(lr, rr) : {
+            switch(e) {
+                Div(le, re) : {
+                    res = isMatchRule(le, lr, vars);
+                    if (res.match) {
+                        isMatchRule(re, rr, res.vars);
+                    } else {
+                        res;
+                    }
+                }
+                default : MatchingResult(vars, false);
+            }
+        }
+        Sum(lr, rr) : {
+            switch(e) {
+                Sum(le, re) : {
+                    res = isMatchRule(le, lr, vars);
+                    if (res.match) {
+                        isMatchRule(re, rr, res.vars);
+                    } else {
+                        res;
+                    }
+                }
+                default : MatchingResult(vars, false);
+            }
+        }
+        Sub(lr, rr) : {
+            switch(e) {
+                Sub(le, re) : {
+                    res = isMatchRule(le, lr, vars);
+                    if (res.match) {
+                        isMatchRule(re, rr, res.vars);
+                    } else {
+                        res;
+                    }
+                }
+                default : MatchingResult(vars, false);
+            }
+        }
+        Neg(rVal) : {
+            switch(e) {
+                Neg(eVal) : isMatchRule(eVal, rVal, vars);
+                default : MatchingResult(vars, false);
+            }
+        }
+        Var(name) : {
+            switch(lookupTree(vars, name)) {
+                Some(val) : MatchingResult(vars, val == e);
+                None() : MatchingResult(setTree(vars, name, e), true);
+            }
+        }
+        Const(cr) : {
+            switch(e) {
+                Const(ce) : MatchingResult(vars, cr == ce);
+                default : MatchingResult(vars, false);
+            }
+        }
+    }
+}
+
+/* yes 2 */ 
+trySimplify(e : RatExpr, rule : RuleExpr) {
+    res = isMatchRule(e, rule.l, makeTree());
+    if (res.match) {
+        simplifyWithVars(rule.r, res.vars);
+    } else {
+        e;
+    }
+}
+
+/* yes 2 */ 
+simplifyWithVars(e : RatExpr, vars : Tree<string, RatExpr>) {
+    switch(e) {
+        Mul(l, r) : Mul(simplifyWithVars(l, vars), simplifyWithVars(r, vars));
+        Div(l, r) : Div(simplifyWithVars(l, vars), simplifyWithVars(r, vars));
+        Sum(l, r) : Sum(simplifyWithVars(l, vars), simplifyWithVars(r, vars));
+        Sub(l, r) : Sub(simplifyWithVars(l, vars), simplifyWithVars(r, vars));
+        Neg(val) : Neg(simplifyWithVars(val, vars));
+        Var(name) : either(lookupTree(vars, name), e);
+        Const(c) : e;
+    }
+}
+
+/* yes 2 */ 
+crossApplyExprRules(exprs : [RatExpr], rules : [RuleExpr]) {
+    fold(rules, [], 
+        \byRules, rule -> 
+            concat(byRules, fold(exprs, [], 
+                \byExprs, expr -> {
+                    simplified = trySimplify(expr, rule);
+                    if (contains(byRules, simplified) || contains(byExprs, simplified) ||
+                        difficulty(expr) < difficulty(simplified)) {
+                        byExprs;
+                    } else {
+                        arrayPush(byExprs, simplified);
+                    }
+                })));
+}
+
+/* yes 2 */ 
+simplifyByRules(e : RatExpr, rules : [RuleExpr]) {
+    //println(e2s(e));
+    
+    switch(e) {
+        Mul(l, r) : {
+            left = simplifyByRules(l, rules);
+            right = simplifyByRules(r, rules);
+            exprs = fold(left, [], \lArr, lVal -> 
+                concat(lArr, fold(right, [], \rArr, rVal -> arrayPush(rArr, Mul(lVal, rVal)))));
+           
+            crossApplyExprRules(exprs, rules);
+        }
+        Div(l, r) : {
+            left = simplifyByRules(l, rules);
+            right = simplifyByRules(r, rules);
+            exprs = fold(left, [], \lArr, lVal -> 
+                concat(lArr, fold(right, [], \rArr, rVal -> arrayPush(rArr, Div(lVal, rVal)))));
+            crossApplyExprRules(exprs, rules);
+        }
+        Sum(l, r) : {
+            left = simplifyByRules(l, rules);
+            right = simplifyByRules(r, rules);
+            exprs = fold(left, [], \lArr, lVal -> 
+                concat(lArr, fold(right, [], \rArr, rVal -> arrayPush(rArr, Sum(lVal, rVal)))));
+            crossApplyExprRules(exprs, rules);
+        }
+        Sub(l, r) : {
+            left = simplifyByRules(l, rules);
+            right = simplifyByRules(r, rules);
+            exprs = fold(left, [], \lArr, lVal -> 
+                concat(lArr, fold(right, [], \rArr, rVal -> arrayPush(rArr, Sub(lVal, rVal)))));
+            crossApplyExprRules(exprs, rules);
+        }
+        Neg(val) : {
+            simplified = simplifyByRules(val, rules);
+            crossApplyExprRules(fold(simplified, [], \arr, v -> arrayPush(arr, Neg(v))), rules);
+        }
+        Var(name) : [Var(name)];
+        Const(c) : [Const(c)];
+    }
+}
+
+/* yes */
+convertToRule(left : string, right : string) {
+    RuleExpr(s2re(left), s2re(right));
+}
+
+/* yes */
+findMinDiff(exprs : [RatExpr]) {
+    fold(exprs, 100000, \min, expr -> {
+        diff = difficulty(expr);
+        if (diff < min) {
+            diff;
+        } else {
+            min;
+        }
+    })
+}
+
+/* yes */
+difficulty(e : RatExpr) {
+    switch(e) {
+        Mul(l, r) : difficulty(l) + difficulty(r) + 1;
+        Div(l, r) : difficulty(l) + difficulty(r) + 1;
+        Sum(l, r) : difficulty(l) + difficulty(r) + 1;
+        Sub(l, r) : difficulty(l) + difficulty(r) + 1;
+        Neg(val) : difficulty(val) + 1;
+        Const(number) : 1;
+        Var(var) : 1;
+    }
+}
+
+/* yes */
+getSimplifiedExprs(exprs : [RatExpr], rules : [RuleExpr]) {
+    allSimplifications = fold(exprs, [], \arr, e -> concat(arr, simplifyByRules(e, rules)));
+    fold(allSimplifications, [], \arr, e -> {
+        if (contains(arr, e)) {
+            arr;
+        } else {
+            arrayPush(arr, e);
+        }
+    });
+}
+
+/* yes */
+maxNotSimplified = 4;
+maxLevel = 30;
+
+/* yes */
+simplifyExprByRules(e : RatExpr, rules : [RuleExpr]) {
+    res = simplifyByRulesLevel([e], rules, 0, 0);
+    res[0]
+}
+
+/* yes */
+simplifyByRulesLevel(exprs: [RatExpr], rules: [RuleExpr], level: int, notSimplified: int) {
+    simplified = getSimplifiedExprs(exprs, rules);
+
+    initMin = findMinDiff(exprs);
+    simplifiedMin = findMinDiff(simplified);
+
+    if (simplifiedMin < initMin) {
+        processSimplified(simplified, rules, level, notSimplified, simplifiedMin);
+    } else if (simplifiedMin == initMin) {
+        processEqualMin(exprs, simplified, rules, level, notSimplified, initMin);
+    } else {
+        filterByDifficulty(exprs, initMin);
+    }
+}
+
+/* yes */
+processSimplified(simplified: [RatExpr], rules: [RuleExpr], level: int, notSimplified: int, simplifiedMin: int) {
+    if (level < maxLevel) {
+        simplifyByRulesLevel(simplified, rules, level + 1, notSimplified);
+    } else {
+        filterByDifficulty(simplified, simplifiedMin);
+    }
+}
+
+/* yes */
+processEqualMin(exprs: [RatExpr], simplified: [RatExpr], rules: [RuleExpr], level: int, notSimplified: int, initMin: int) {
+    if (level < maxLevel && notSimplified < maxNotSimplified) {
+        simplifyByRulesLevel(simplified, rules, level + 1, notSimplified + 1);
+    } else {
+        filterByDifficulty(exprs, initMin);
+    }
+}
+
+/* yes */
+filterByDifficulty(exprs: [RatExpr], minDifficulty: int) {
+    filter(exprs, \e -> minDifficulty == difficulty(e));
+}
