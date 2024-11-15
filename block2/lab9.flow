@@ -1,23 +1,13 @@
 import labs/block2/rational/polynomRat;
 
 main() {
-    //Polynom calculator test
-    // testPolynom = "((((x*x)*2)+3)-(2*(x*x)))";
-    // testPolynom = "((((5*x)*x) + ((6*(x*y)) + ((5+y)*(x * x)))) / (2*x))";
-    // testPolynom = "(((x/y)+1)+((y/x)+(x/y)))";
-    // testPolynom = "((((a + 1) / (7 * c)) * ((7 + (6 * c)) / x)) / ((3 * (a + 1)) / (x * x)))";
-    // testPolynom = "((((x - 6) / (6 * y)) / (((x * x) - (y * y)) / y)) * (((x * x) + ((2 * (x * y)) + (y * y))) / x))";
-    // testPolynom = "(((4 * (a * a)) - 9) * ((1 / ((2 * a) - 3)) - (1 / ((2 * a) + 3))))";
-    // testPolynom = "(((3 * x) / (x + 2)) + ((y * x) / (5 + x)))";
-
     testPolynom = "((20 + y) * x + x) / (4 * x)";
     exp = s2re(testPolynom);
-    println("func: " + re2s(exp, 0));
+    println(re2s(exp, 0));
     
-    // params = setTreeValues(makeTree(), [Pair("y", ratNum(1, 1))]);
     params = makeTree();
     polynom = calculatePolynomRatArr(exp, params, [Var("a"), Var("c"), Var("x"), Var("y")], Var("x"));
-    println("polynom: " + ratPolynom2s(polynom));
+    println(ratPolynom2s(polynom));
 
     quit(0);
 }

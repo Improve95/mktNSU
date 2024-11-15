@@ -1,0 +1,18 @@
+import labs/block2/rational/rationalDiff;
+
+main() {
+    testDifferential = "(3 * x * x) + (-5 * x + 7)";
+    println(testDifferential);
+
+    expr = s2re(testDifferential);
+
+    diffExpr = differentiation(expr, Var("x"));
+    println(re2s(diffExpr, 0));
+
+    params = setTreeValues(makeTree(), [Pair("x", ratNum(1, 2))]);
+    
+    solveRat = calcRe(diffExpr, params);
+    println(reNum2s(solveRat));
+
+    quit(0);
+}
