@@ -19,9 +19,10 @@ main() {
     tree = setTreeValues(TreeEmpty(), vars);
 
     simpleExpr = simplification(toCommon(testPolynom));
-    println(simpleExpr);
+    println(re2s(simpleExpr, 0));
 
-    println(calcRe(simpleExpr, tree));
+    res = calcRe(simpleExpr, tree);
+    println(reNum2s(res));
 
 
     /* v4 */
