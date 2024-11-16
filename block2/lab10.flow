@@ -19,7 +19,9 @@ main() {
 
     /* v4 */
     
-    testPolynom = "(x * 2 + 0) + x * 3";
+    // testPolynom = "(x * 2 + 0) + x * 3";
+    testPolynom = "x + y";
+
     polynomExpr = s2re(testPolynom);
 
     simplePolynomExpr = maxTransform(polynomExpr);

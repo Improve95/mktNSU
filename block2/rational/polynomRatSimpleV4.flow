@@ -108,7 +108,7 @@ convertToRule(from : string, to : string) -> RuleExpr {
 
 
 transformations = [
-    // convertToRule("x + y", "y + x"),
+    convertToRule("x + y", "y + x"),
     // convertToRule("x + x", "2 * x"),
     // convertToRule("x + y + z", "y + z + x"),
     convertToRule("x + 0", "x"),
