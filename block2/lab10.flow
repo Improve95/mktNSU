@@ -1,57 +1,36 @@
-// import labs/block2/rational/polynomRatSimpleV1;
 // import labs/block2/rational/polynomRatSimpleV2;
 import labs/block2/rational/polynomRatSimpleV4;
 
 main() {
-    /* v1 */
-    /* 
-    testNum = "x + y + z + y";
-    testDen = "1";
-    println("str: " + testNum);
-
-    polynom = ratPolynom(s2re(testNum), s2re(testDen));
-    println("Func: " + ratPolynom2s(Some(polynom)));
-
-    simpl = simplificationByIdentities(polynom,
-        [
-            Pair("x + y", "y + x"),
-            Pair("x + x", "2*x"),
-            Pair("x + y + z", "x + z + y"),
-            Pair("((x*x)-(y*y))", "((x-y)*(x+y))"),
-            Pair("(((x*x)+(2*(x*y)))+(y*y))", "((x+y)*(x+y))"),
-            Pair("((x*y)+(x*z))", "(x*(y+z))"),
-            Pair("(x/x)", "1"),
-            Pair("((x*y)/x)", "y"),
-            Pair("((y*x)/x)", "y"),
-            Pair("((x*y)/(x*z))", "(y/z)"),
-            Pair("((x*y)/(z*x))", "(y/z)"),
-            Pair("((y*x)/(x*z))", "(y/z)"),
-            Pair("((y*x)/(z*x))", "(y/z)")
-        ]);
-    println("simpl: " + ratPolynom2s(Some(simpl)));
-    */
-
     /* v2 */
     /* 
-    expr2 = s2re("a + b + c + c + a + b");
+    expr2 = s2re("x + 0 / x");
 
     res = simplifyExprByRules(expr2, 
     [
         convertToRule("x + y", "x + y"),
         convertToRule("x + x", "2 * x"),
-        convertToRule("x + (y + z)", "y + (z + x)")
+        convertToRule("x + (y + z)", "y + (z + x)"),
+        convertToRule("x + 0", "x")
     ]);
 
     println(re2s(res, 0)); 
     */
 
     /* v4 */
-    testPolynom = "x + y + z + y";
-    expr = s2re(testPolynom);
+    
+    testPolynom = "(x * 2 + 0) + x * 3";
+    polynomExpr = s2re(testPolynom);
 
-    simpleExpr = maxTransform(expr);
+    simplePolynomExpr = maxTransform(polynomExpr);
 
-    println(re2s(simpleExpr, 0));
+    println(re2s(simplePolynomExpr, 0));
 
-    quit(0); 
+    vars = [Pair("x", RatNum(3, 2))];
+    tree = setTreeValues(TreeEmpty(), vars);
+
+    res = calcRe(simplePolynomExpr, tree);
+    println(reNum2s(res));
+
+    quit(0);
 }

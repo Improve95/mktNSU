@@ -1,13 +1,15 @@
 import labs/block2/rational/polynomRatV2;
 
 main() {
-    testPolynom = s2re("x + 1 / x");
+    testPolynom = "x + 0 / x";
+
+    polynomExpr = s2re(testPolynom);
+
+    simpleExpr = simplification(toCommon(polynomExpr));
+    println(re2s(simpleExpr, 0));
 
     vars = [Pair("x", RatNum(2, 1))];
     tree = setTreeValues(TreeEmpty(), vars);
-
-    simpleExpr = simplification(toCommon(testPolynom));
-    println(re2s(simpleExpr, 0));
 
     res = calcRe(simpleExpr, tree);
     println(reNum2s(res));
