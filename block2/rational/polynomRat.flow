@@ -27,23 +27,10 @@ simplificationRat(rat : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
             trNum = polynom2tree(numerator, tr, var);
             trDen = polynom2tree(denominator, tr, var);
 
-            // println("================"); // DEBUG
-            // println("Old: " + expr2s(numerator));
-            // println(expr2s(lookupTreeDef(trNum, 0, Const(0))));
-            // println(expr2s(lookupTreeDef(trNum, 1, Const(0))));
-            // println(expr2s(lookupTreeDef(trNum, 2, Const(0))));
-            // println(expr2s(lookupTreeDef(trNum, 3, Const(0))));
-
             newTrees = treeCutting(trNum, trDen);
             
             newNumerator = tree2polynom(newTrees.first, var);
             newDenominator = tree2polynom(newTrees.second, var);
-            
-            // println("New: " + expr2s(newNumerator));
-            // println(expr2s(lookupTreeDef(newTrees.first, 0, Const(0))));
-            // println(expr2s(lookupTreeDef(newTrees.first, 1, Const(0))));
-            // println(expr2s(lookupTreeDef(newTrees.first, 2, Const(0))));
-            // println(expr2s(lookupTreeDef(newTrees.first, 3, Const(0))));
 
             Some(ratPolynom(newNumerator, newDenominator));
         }
