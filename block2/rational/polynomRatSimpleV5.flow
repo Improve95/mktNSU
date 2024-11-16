@@ -20,7 +20,7 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
             leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
             rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
 
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
                 mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
                     insertSet(setRight, 
                         switch(operation) {
