@@ -1,0 +1,241 @@
+import labs/block2/rational/polynomRatV2;
+
+import string;
+import ds/array;
+import ds/tree;
+import ds/set;
+import lingo/pegcode/driver;
+
+maybeSum = maybeMap2(\l, r -> Binary(l, r, SumOp()));
+maybeSub = maybeMap2(\l, r -> Binary(l, r, SubOp()));
+maybeMul = maybeMap2(\l, r -> Binary(l, r, MulOp()));
+maybeDiv = maybeMap2(\l, r -> Binary(l, r, DivOp()));
+
+MyRule(left: RatExpr, right: RatExpr);
+
+applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<Maybe<RatExpr>> {
+    initSet : Set<Maybe<RatExpr>> = makeSet1(Some(expr));
+    allForms = switch(expr) {
+        Binary(left, right, operation): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, 
+                        switch(operation) {
+                            SumOp(): maybeSum(leftI, rightI);
+                            SubOp(): maybeSub(leftI, rightI);
+                            MulOp(): maybeMul(leftI, rightI);
+                            DivOp(): maybeDiv(leftI, rightI);
+                        }
+                    );
+                }))
+            }));
+        }
+        Neg(e): {
+            set = applyAllRules(e, rules, makeSet1(Some(e)));
+
+            foldSet(set, makeSet(), \setI, i -> {
+                insertSet(setI, maybeMap(i, \c -> Neg(c)));
+            });
+              
+            mergeSets(initSet, set);
+        }
+        Int(num): initSet;
+        Var(name): initSet;
+    }
+
+    appliedRules = mergeSets(allForms, foldSet(allForms, makeSet(), \setI, exprI ->{
+        mergeSets(setI, fold(rules, makeSet(), \setJ, rule -> {
+            switch(exprI) {
+                None(): setJ;
+                Some(a): insertSet(setJ, tryApplyRule(a, rule));
+            }
+        }));
+    }));
+
+    foldSet(differenceSets(appliedRules, res), mergeSets(res, appliedRules), \acc, e -> {
+        switch (e) {
+            None(): acc;
+            Some(a):{
+                mergeSets(acc, applyAllRules(a, rules, acc));
+            }
+        }
+    });
+}
+
+applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr>{
+    switch(ruleRight) {
+        Binary(left, right, operation): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            switch(operation) {
+                SumOp(): maybeSum(leftValue, rightValue);
+                SubOp(): maybeSub(leftValue, rightValue);
+                MulOp(): maybeMul(leftValue, rightValue);
+                DivOp(): maybeDiv(leftValue, rightValue);
+            }
+        }
+        Neg(e): {
+            val = applyRule(e, replacement);
+            maybeMap(val, \c -> Neg(c));
+        }
+        Int(num): {
+            Some(Int(num));
+        }
+        Var(name): {
+            lookupTree(replacement, name);
+        }
+    }
+}
+
+tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
+    replacements = compare(expr, rule.left, Some(makeTree()));
+    maybeBind(replacements, \repl -> applyRule(rule.right, repl));
+}
+
+compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tree> {
+    switch(ruleLeft) {
+        Binary(left, right, operation): {
+            switch(expr) {
+                Binary(l, r, op): {
+                    if (op == operation) {
+                        compare(r, right, compare(l, left, replacement));
+                    } else {
+                        None();
+                    }
+                }
+                default: None();
+            }
+        }
+        Neg(e): {
+            switch(expr: RatExpr) {
+                Neg(f): {
+                    compare(f, e, replacement);
+                }
+                default: None();
+            }
+        }
+        Int(num): {
+            switch(expr: RatExpr) {
+                Int(num1): {
+                    if(num1 == num) {
+                        replacement;
+                    } else {
+                        None();
+                    }
+                }
+                default: None();
+            }
+        }
+        Var(name): {
+            arg = maybeBind(replacement, \e -> lookupTree(e, name));
+
+            switch(arg) {
+                Some(v): {
+                    if(v == expr) {
+                        replacement;
+                    } else {
+                        None();
+                    }
+                }
+                None(): {
+                    maybeMap(replacement, \c -> setTree(c, name, expr));
+                }
+            }
+        }
+    }
+}
+
+size(expr: RatExpr) {
+    switch(expr) {
+        Binary(left, right, op): size(left) + 1 + size(right);
+        Neg(e): size(e) + 1;
+        Int(num): 1;
+        Var(name): 1;
+    }
+}
+
+simplify(expr: RatExpr, rules: [MyRule]) -> RatExpr {
+    set = applyAllRules(expr, rules, makeSet1(Some(expr)));
+    foldSet(set, expr, \exprI, i -> {
+        switch(i) {
+            None(): exprI;
+            Some(a): {
+                if(size(a) > size(exprI)) {
+                    exprI;
+                } else {
+                    a;
+                }
+            }
+        }
+    });
+}
+
+expr2str(expr: RatExpr) -> string {
+    switch (expr) {
+        Binary(left, right, op): {
+            "(" + expr2str(left) + 
+            switch(op) {
+                SumOp(): " + ";
+                SubOp(): " - ";
+                MulOp(): " * ";
+                DivOp(): " / ";
+            } + expr2str(right) + ")";
+        }
+        Int(num): i2s(num);
+        Var(letter): letter;
+        Neg(e): "(" + "- " + expr2str(e) + ")";
+    }
+}
+
+parse(str: string) {
+    makeSub = \exprs: [flow] -> {
+        fold(exprs[1], exprs[0], \acc, x -> Binary(acc, x, SubOp()));
+    };
+
+    makeDiv = \exprs: [flow] -> {
+        fold(exprs[1], exprs[0], \acc, x -> Binary(acc, x, DivOp()));
+    };
+
+    parsic(
+        compilePegGrammar("#include labs/rl/ast/v5/grammar_2.lingo"),
+        str,
+        SemanticActions(
+            setTree(
+                setTree(
+                    defaultPegActions.t,
+                    "makeSub",
+                    makeSub
+                ),
+                "makeDiv",
+                makeDiv
+            )
+        )
+    );
+}
+
+parseRules(rule: string) -> MyRule {
+    index = strFindFirstOf(rule, "=");
+
+    MyRule(parse(strLeft(rule, index)), parse(strRight(rule, index+1)));
+}
+
+
+main() {
+    expression = "w + i + z + i";
+
+    rules = [
+        "y+x=x+y",
+        "x+x=2*x",
+        "a+b+c=b+c+a"
+    ];
+    
+    rulesArr = map(rules, parseRules);
+
+    r = simplify(parse(expression), rulesArr);
+    println(expr2str(r));
+    quit(0);
+}

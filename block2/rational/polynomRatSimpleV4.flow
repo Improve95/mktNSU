@@ -8,7 +8,7 @@ RuleExpr(from : RatExpr, to : RatExpr);
 
 MatchResult(result : bool, context : Tree<string, RatExpr>);
 
-matchCheck (e1 : RatExpr, e2 : RatExpr, context : Tree<string, RatExpr>) -> MatchResult {
+matchCheck(e1 : RatExpr, e2 : RatExpr, context : Tree<string, RatExpr>) -> MatchResult {
     switch (e1) {
         Const(val1) : {
             switch (e2) {
