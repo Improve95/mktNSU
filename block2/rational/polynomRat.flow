@@ -5,281 +5,280 @@ import labs/block2/rational/rationalDiff;
 */
 
 export {
-    ratPolynom : (numerator : RatExpr, denominator : RatExpr);
-
-    sumRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var)  -> Maybe<ratPolynom>;
-    subRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var)  -> Maybe<ratPolynom>;
-    mulRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var)  -> Maybe<ratPolynom>;
-    divRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var)  -> Maybe<ratPolynom>;
-    ratPolynom2s(rat : Maybe<ratPolynom>)                                   -> string;
-    calculatePolynomRat(v : RatExpr, params : Tree<string, ratNum>, var : Var) -> Maybe<ratPolynom>;
-    simplificationRat(rat : Maybe<ratPolynom>, var : Var)                   -> Maybe<ratPolynom>;
-    ratPolynom2Expr(rat : ratPolynom)                                       -> RatExpr;
-    calculatePolynomRatArr(v : RatExpr, params : Tree<string, ratNum>, vars : [Var], resVar : Var) -> Maybe<ratPolynom>;
+    ratFunc2s(p : [Polynomial]) -> string;
+    divExpr2ratFunc(e : RatExpr) -> [Polynomial];
+    expr2commonDenum(e : RatExpr) -> RatExpr;
 }
 
-simplificationRat(rat : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
-    switch (rat) {
-        Some(v) : {
-            numerator = v.numerator;
-            denominator = v.denominator;
-            tr = makeTree();
-            trNum = polynom2tree(numerator, tr, var);
-            trDen = polynom2tree(denominator, tr, var);
+Rational(n : int, d : int);
 
-            newTrees = treeCutting(trNum, trDen);
-            
-            newNumerator = tree2polynom(newTrees.first, var);
-            newDenominator = tree2polynom(newTrees.second, var);
+Monomial(prod : Tree<string, int>);
+Polynomial(sum : Tree<Monomial, int>);
 
-            Some(ratPolynom(newNumerator, newDenominator));
-        }
-        None() : None();
+isDiv(e : RatExpr) -> bool {
+    switch(e) {
+        Div(l, r) : true;
+        default : false;
     }
 }
 
-treeCutting(tree1 : Tree<int, RatExpr>, tree2 : Tree<int, RatExpr>) -> Pair<Tree<int, RatExpr>, Tree<int, RatExpr>> {
-    t1 = switch(popmin(tree1)) {
-            PopResult(k, v, rest) : Pair(k, v);
-            EmptyPopResult()      : Pair(0, Const(1));
-        }
-    t2 = switch(popmin(tree2)) {
-            PopResult(k, v, rest) : Pair(k, v);
-            EmptyPopResult()      : Pair(0, Const(1));
-        }
-
-    intTest = fold(getTreeValues(tree1), 1, \acc, elem -> {
-        if (acc == 0) 0
-        else if (elem.structname != "Const") 0
-        else 1
-        })
-    intTest2 = fold(getTreeValues(tree2), 1, \acc, elem -> {
-        if (acc == 0) 0
-        else if (elem.structname != "Const") 0
-        else 1
-        })
-    
-    if (intTest + intTest2 == 2) {
-        nod = gcdA(concat(map(getTreeValues(tree1), \t -> 
-                            {tInt = cast(t : RatExpr -> Const);
-                             tInt.number}),
-                          map(getTreeValues(tree2), \t -> 
-                            {tInt = cast(t : RatExpr -> Const);
-                             tInt.number})));
-
-        mn = min(t1.first, t2.first);
-        res1 = foldTree(tree1, makeTree(), \k,v,res -> setTree(res, k - mn, {
-            tInt = cast(v : RatExpr -> Const);
-            Const(tInt.number / nod) 
-            }));
-        res2 = foldTree(tree2, makeTree(), \k,v,res -> setTree(res, k - mn, {
-            tInt = cast(v : RatExpr -> Const);
-            Const(tInt.number / nod) 
-            }));
-        Pair(res1, res2);
-    } else {
-        mn = min(t1.first, t2.first);
-        res1 = foldTree(tree1, makeTree(), \k,v,res -> setTree(res, k - mn, v));
-        res2 = foldTree(tree2, makeTree(), \k,v,res -> setTree(res, k - mn, v));
-        Pair(res1, res2);
+extractArgs(e : RatExpr) -> [RatExpr] {
+    switch(e) {
+        Sum(l, r) : [l, r];
+        Sub(l, r) : [l, r];
+        Mul(l, r) : [l, r];
+        Div(l, r) : [l, r];
+        default : [e];
     }
 }
 
-polynom2tree(ex : RatExpr, tree : Tree<int, RatExpr>, var : Var) -> Tree<int, RatExpr> {
-    switch (ex) {
-		Mul(a, b) : {
-            p = getMonomialOrder(ex, var);
-            switch (lookupTree(tree, p.first)) {
-                Some(v) : setTree(tree, p.first, simplification( Sum(p.second, v) ));
-                None() : setTree(tree, p.first, p.second);
+i2rat(a : int) -> Rational {
+    Rational(a, 1);
+}
+
+rat2s(r : Rational) -> string {
+    if (r.d == 1) {i2s(r.n);}
+    else if (r.d == 0) {"inf";}
+    else i2s(r.n) + "/" + i2s(r.d);
+}
+
+simplifyRat(r : Rational) -> Rational {
+    g = iabs(gcd(r.n, r.d));
+    if ((r.n < 0 && r.d < 0) || (r.n > 0 && r.d < 0)) {
+        Rational(-r.n / g, -r.d / g);
+    }
+    else {
+        Rational(r.n / g, r.d / g);
+    }
+}
+
+addRat(l : Rational, r : Rational) -> Rational {
+    Rational(l.n * r.d + r.n * l.d, l.d * r.d);
+}
+
+subRat(l : Rational, r : Rational) -> Rational {
+    Rational(l.n * r.d - r.n * l.d, l.d * r.d);
+}
+
+mulRat(l : Rational, r : Rational) -> Rational {
+    Rational(l.n * r.n, l.d * r.d);
+}
+
+divRat(l : Rational, r : Rational) -> Rational {
+    Rational(l.n * r.d, l.d * r.n);
+}
+
+negRat(arg : Rational) {
+    Rational(-arg.n, arg.d);
+}
+
+expr2s(e : RatExpr) -> string {
+    switch (e) {
+        Const(c) : i2s(c);
+        Mul(l, r) : "(" + expr2s(l) + " * " + expr2s(r) + ")";
+        Sum(l, r) : "(" + expr2s(l) + " + " + expr2s(r) + ")";
+        Sub(l, r) : "(" + expr2s(l) + " - " + expr2s(r) + ")";
+        Div(l, r) : "(" + expr2s(l) + " / " + expr2s(r) + ")";
+        Neg(arg) : "(-" + expr2s(arg) + ")";
+        Var(x) : x;
+    }
+}
+
+expr2rat(e: RatExpr, vars : Tree<string, int>) -> Rational {
+    switch (e) {
+        Const(c) : i2rat(c);
+        Mul(l, r) : simplifyRat(mulRat(expr2rat(l, vars), expr2rat(r, vars)));
+        Sum(l, r) : simplifyRat(addRat(expr2rat(l, vars), expr2rat(r, vars)));
+        Sub(l, r) : simplifyRat(subRat(expr2rat(l, vars), expr2rat(r, vars)));
+        Div(l, r) : simplifyRat(divRat(expr2rat(l, vars), expr2rat(r, vars)));
+        Neg(arg) : simplifyRat(negRat(expr2rat(arg, vars)));
+        Var(name) : {
+            x = switch(lookupTree(vars, name)) {
+                None() : i2rat(0);
+                Some(val) : i2rat(val);
+            };
+            x;
+        }
+    }
+}
+
+derivation(e : RatExpr, var : string) -> RatExpr {
+    switch (e) {
+        Const(c) : Const(0);
+        Sum(l, r) : Sum(derivation(l, var), derivation(r, var));
+        Sub(l, r) : Sub(derivation(l, var), derivation(r, var));
+        Mul(l, r) : Sum(Mul(derivation(l, var), r), Mul(l, derivation(r, var)));
+        Div(l, r) : Div(Sub(Mul(derivation(l, var), r), Mul(l, derivation(r, var))), Mul(r, r));
+        Neg(arg) : Neg(derivation(arg, var));
+        Var(name) : {
+            if (name == var) {
+                Const(1);
+            }
+            else {
+                Const(0);
             }
         }
-		Sum(a, b) : {
-            tr = polynom2tree(a, tree, var);
-            polynom2tree(b, tr, var);
+    }
+}
+
+simplifyExpr(e : RatExpr) -> RatExpr {
+    switch (e) {
+        Mul(l, r) : {
+            if (simplifyExpr(l) == Const(1)) {simplifyExpr(r);} // 1 * x -> x
+            else if (simplifyExpr(r) == Const(1)) {simplifyExpr(l);} // x * 1 -> x
+            else if (simplifyExpr(l) == Const(0) || (simplifyExpr(r) == Const(0))) {Const(0);} // 0 * x || x * 0 -> 0
+            else {Mul(simplifyExpr(l), simplifyExpr(r));}
         }
-        Div(a, b) : tree;
-        Sub(a, b) : {
-            tr = polynom2tree(b, tree, var);
-            mTr = foldTree(tr, makeTree(), \k,v,res -> setTree(res, k, simplification( Neg(v) )));
-            polynom2tree(a, mTr, var);
+        Sum (l, r) : {
+            if (simplifyExpr(l) == Const(0)) {simplifyExpr(r);} // 0 + x -> x
+            else if (simplifyExpr(r) == Const(0)) {simplifyExpr(l);} // x + 0 -> x
+            else {Sum(simplifyExpr(l), simplifyExpr(r));}
         }
-        Neg(a)    : {
-            tr = polynom2tree(a, tree, var);
-            foldTree(tr, makeTree(), \k,v,res -> setTree(res, k, simplification( Neg(v) )));
+        Sub(l, r) : {
+            if (simplifyExpr(l) == Const(0)) {Neg(simplifyExpr(r));} // 0 - x -> -x
+            else if (simplifyExpr(r) == Const(0)) {simplifyExpr(l);} // x - 0 -> x
+            else if (simplifyExpr(l) == simplifyExpr(r)) {Const(0);} // x - x -> 0
+            else Sub(simplifyExpr(l), simplifyExpr(r));
         }
-        Const(a)    : switch(lookupTree(tree, 0)) {
-                        Some(v) : setTree(tree, 0, simplification( Sum(v, ex) ));
-                        None() : setTree(tree, 0, ex);
-                    }
-        Var(a)    : if (ex == var) switch(lookupTree(tree, 1)) {
-                            Some(v) : setTree(tree, 1, simplification( Sum(v, Const(1)) ));
-                            None() : setTree(tree, 1, Const(1));
-                        }
-                    else switch(lookupTree(tree, 0)) {
-                            Some(v) : setTree(tree, 0, simplification( Sum(v, ex)) );
-                            None() : setTree(tree, 0, ex);
-                        }
-	}
-}
-
-tree2polynom(tree : Tree<int, RatExpr>, var : Var) -> RatExpr {
-    switch (popmin(tree)) {
-        PopResult(k, v, rest) : simplification( Sum(tree2polynom(rest, var), getMonomial(k, v, var)) );
-        EmptyPopResult()      : Const(0);
-    }
-}
-
-getMonomial(order : int, value : RatExpr, var : Var) -> RatExpr {
-    if (order <= 0) value
-    else simplification( Mul(getMonomial(order - 1, value, var), var) ); 
-}
-
-// Return pair(oder, value)
-getMonomialOrder(ex : RatExpr, var : Var) -> Pair<int, RatExpr> {
-    switch (ex) {
-        Const(a)    : Pair(0, ex);
-        Neg(a)    : {
-            tPair = getMonomialOrder(a, var);
-            Pair(tPair.first, simplification( Neg(tPair.second)) );
+        Div(l, r) : {
+            if (simplifyExpr(l) == Const(0)) {Const(0);} // 0 / x -> 0
+            else if (simplifyExpr(l) == simplifyExpr(r)) {Const(1);} // x / x -> 1
+            else Div(simplifyExpr(l), simplifyExpr(r));
         }
-        Sum(a, b) : Pair(0, ex);
-        Sub(a, b) : Pair(0, ex);
-        Div(a, b) : Pair(0, ex);
-        Mul(a, b) : {
-            m1 = getMonomialOrder(a, var);
-            m2 = getMonomialOrder(b, var);
-            Pair(m1.first + m2.first, simplification( Mul(m1.second, m2.second)) );
-        };
-        Var(a) : if (ex == var) Pair(1, Const(1))
-                 else Pair(0, ex);
+        default : e;
     }
 }
 
-sumRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
-    if (isSome(l) && isSome(r)) {
-        newL = either(l, ratPolynom(Const(0),Const(0)));
-        newR = either(r, ratPolynom(Const(0),Const(0)));
-
-        if (newL.numerator == Const(0)) r
-        else if (newR.numerator == Const(0)) l
-        else simplificationRat(Some( ratPolynom(
-                        simplification( Sum(
-                            simplification( Mul(newL.numerator, newR.denominator) ), 
-                            simplification( Mul(newR.numerator, newL.denominator) )) ), 
-                        simplification( Mul(newL.denominator, newR.denominator) ))), var);
-    } else {
-        None();
-    }
-}
-
-subRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
-    if (isSome(l) && isSome(r)) {
-        newL = either(l, ratPolynom(Const(0),Const(0)));
-        newR = either(r, ratPolynom(Const(0),Const(0)));
-
-        if (newL.numerator == Const(0)) mulRatPolynom(Some(ratPolynom(Neg(Const(1)), Const(1))), r, var)
-        else if (newR.numerator == Const(0)) l
-        else simplificationRat(Some( ratPolynom(
-                        simplification( Sub(
-                            simplification( Mul(newL.numerator, newR.denominator) ), 
-                            simplification( Mul(newR.numerator, newL.denominator) )) ), 
-                        simplification( Mul(newL.denominator, newR.denominator) ))), var);
-    } else {
-        None();
-    }
-}
-
-mulRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
-    if (isSome(l) && isSome(r)) {
-        newL = either(l, ratPolynom(Const(0),Const(0)));
-        newR = either(r, ratPolynom(Const(0),Const(0)));
-
-        if (newL.numerator == Const(0) || newR.numerator == Const(0))
-            Some(ratPolynom(Const(0), Const(1)))
-        else
-            simplificationRat(Some( ratPolynom(
-                        simplification( Mul(newL.numerator, newR.numerator) ), 
-                        simplification( Mul(newL.denominator, newR.denominator) ))), var);
-    } else {
-        None();
-    }
-}
-
-divRatPolynom(l : Maybe<ratPolynom>, r : Maybe<ratPolynom>, var : Var) -> Maybe<ratPolynom> {
-    if (isSome(l) && isSome(r)) {
-        newL = either(l, ratPolynom(Const(0),Const(0)));
-        newR = either(r, ratPolynom(Const(0),Const(0)));
-
-        if (newL.numerator == Const(0))
-            Some(ratPolynom(Const(0), Const(1)))
-        else
-            simplificationRat(Some( ratPolynom(
-                        simplification( Mul(newL.numerator, newR.denominator) ), 
-                        simplification( Mul(newL.denominator, newR.numerator) ))), var);
-    } else {
-        None();
-    }
-}
-
-calculatePolynomRatArr(v : RatExpr, params : Tree<string, ratNum>, vars : [Var], resVar : Var) -> Maybe<ratPolynom> {
-    newV = fold(vars, v, \acc, elem -> ratPolynom2Expr(either(calculatePolynomRat(acc, params, elem), ratPolynom(Const(0), Const(0)))));
-    calculatePolynomRat(newV, params, resVar);
-}
-
-calculatePolynomRat(v : RatExpr, params : Tree<string, ratNum>, var : Var) -> Maybe<ratPolynom> {
-    switch (v) {
-        Sum(a, b) : 
-            sumRatPolynom(
-                calculatePolynomRat(a, params, var), 
-                calculatePolynomRat(b, params, var),
-                var
-            );
-        Mul(a, b) : 
-            mulRatPolynom(
-                calculatePolynomRat(a, params, var), 
-                calculatePolynomRat(b, params, var),
-                var
-            );
-        Div(a, b) : 
-            divRatPolynom(
-                calculatePolynomRat(a, params, var), 
-                calculatePolynomRat(b, params, var),
-                var
-            );
-        Sub(a, b) : 
-            subRatPolynom(
-                calculatePolynomRat(a, params, var),
-                calculatePolynomRat(b, params, var),
-                var
-            );
-        Neg(a) : 
-            mulRatPolynom(
-                Some(ratPolynom(Neg(Const(1)), Const(1))), 
-                calculatePolynomRat(a, params, var),
-                var
-            );
-        Const(a) : 
-            Some(ratPolynom(Const(a), Const(1)));
-        Var(a) : 
-            switch(lookupTree(params, a)) {
-                Some(p) : Some(ratPolynom(Const(p.n), Const(p.d)));
-                None()  : Some(ratPolynom(v, Const(1)));
+expr2commonDenum(e : RatExpr) -> RatExpr {
+    switch(e) {
+        Const(val) : Const(val);
+        Var(name) : Var(name);
+        Neg(arg) : Neg(expr2commonDenum(arg));
+        Sum(l, r) : {
+            newL = expr2commonDenum(l);
+            newR = expr2commonDenum(r);
+            argsL = extractArgs(newL);
+            argsR = extractArgs(newR);
+            if (isDiv(newL) && isDiv(newR)) { // a/b + c/d -> (ad + bc) / bd
+                Div(Sum(Mul(argsL[0], argsR[1]), Mul(argsL[1], argsR[0])), Mul(argsL[1], argsR[1]));
             }
+            else if (isDiv(newL)) { // a/b + c -> (a + bc) / b
+                Div(Sum(argsL[0], Mul(argsL[1], newR)), argsL[1]);
+            }
+            else if (isDiv(newR)) { // a + b/c -> (ac + b) / c
+                Div(Sum(Mul(newL, argsR[1]), argsR[0]), argsR[1]);
+            }
+            else e;
+        }
+        Sub(l, r) : {
+            newL = expr2commonDenum(l);
+            newR = expr2commonDenum(r);
+            argsL = extractArgs(newL);
+            argsR = extractArgs(newR);
+            if (isDiv(newL) && isDiv(newR)) { // a/b - c/d -> (ad - bc) / bd
+                Div(Sub(Mul(argsL[0], argsR[1]), Mul(argsL[1], argsR[0])), Mul(argsL[1], argsR[1]));
+            }
+            else if (isDiv(newL)) { // a/b - c -> (a - bc) / b
+                Div(Sub(argsL[0], Mul(argsL[1], newR)), argsL[1]);
+            }
+            else if (isDiv(newR)) { // a - b/c -> (ac - b) / c
+                Div(Sub(Mul(newL, argsR[1]), argsR[0]), argsR[1]);
+            }
+            else e;
+        }
+        Mul(l, r) : {
+            newL = expr2commonDenum(l);
+            newR = expr2commonDenum(r);
+            argsL = extractArgs(newL);
+            argsR = extractArgs(newR);
+            if (isDiv(newL) && isDiv(newR)) { // a/b * c/d -> ac / bd
+                Div(Mul(argsL[0], argsR[0]), Mul(argsL[1], argsR[1]));
+            }
+            else if (isDiv(newL)) { // a/b * c -> ac / b
+                Div(Mul(argsL[0], newR), argsL[1]);
+            }
+            else if (isDiv(newR)) { // a * b/c -> ab / c
+                Div(Mul(newL, argsR[0]), argsR[1]);
+            }
+            else e;
+        }
+        Div(l, r) : {
+            newL = expr2commonDenum(l);
+            newR = expr2commonDenum(r);
+            argsL = extractArgs(newL);
+            argsR = extractArgs(newR);
+            if (isDiv(newL) && isDiv(newR)) { // a/b / c/d -> ad / bc
+                Div(Mul(argsL[0], argsR[1]), Mul(argsL[1], argsR[0]));
+            }
+            else if (isDiv(newL)) { // a/b / c -> a / bc
+                Div(argsL[0], Mul(argsL[1], newR));
+            }
+            else if (isDiv(newR)) { // a / b/c -> ac / b
+                Div(Mul(newL, argsR[1]), argsR[0]);
+            }
+            else e;
+        }
     }
 }
 
-ratPolynom2s(rat : Maybe<ratPolynom>) -> string {
-    if (isSome(rat)) {
-        newRat = either(rat, ratPolynom(Const(0),Const(0)));
-        if (newRat.denominator == Const(0)) "Division by zero..."
-        else if (newRat.denominator == Const(1)) re2s(newRat.numerator, 0)
-        else re2s(newRat.numerator , 0) + "/" + re2s(newRat.denominator, 0);
-    } else {
-        "Calculate error...";
+expr2polynomial(e : RatExpr) -> Polynomial {
+    switch(e) {
+        Const(val) : Polynomial(makeTree1(Monomial(makeTree1("1", 1)), val));
+        Var(name) : Polynomial(makeTree1(Monomial(makeTree1(name, 1)), 1));
+        Sum(l, r) : {
+            Polynomial(mergeTreeCustom(expr2polynomial(l).sum, expr2polynomial(r).sum, \var, k1, k2 -> k1 + k2));
+        }
+        Sub(l, r) : {
+            Polynomial(mergeTreeCustom(expr2polynomial(l).sum, expr2polynomial(Neg(r)).sum, \var, k1, k2 -> k1 + k2));
+        }
+        Neg(arg) : {
+            Polynomial(mapTree(expr2polynomial(arg).sum, \k -> -k));
+        }
+        Mul(l, r) : {
+            treeL = expr2polynomial(l).sum;
+            treeR = expr2polynomial(r).sum;
+            Polynomial(
+                foldTree(treeL, makeTree(), \monoL, k1, acc1 -> {
+                    foldTree(treeR, acc1, \monoR, k2, acc2 -> {
+                        mergedMonos = Monomial(mergeTreeCustom(monoL.prod, monoR.prod, \var, deg1, deg2 -> {
+                            if (var == "1") 1
+                            else deg1 + deg2
+                        }));
+                        mergeTreeCustom(acc2, makeTree1(mergedMonos, k1 * k2), \var, c1, c2 -> c1 + c2);
+                    });
+                })
+            );
+        }
+        default : Polynomial(makeTree());
     }
 }
 
-ratPolynom2Expr(rat : ratPolynom) -> RatExpr {
-    Div(rat.numerator, rat.denominator);
+monomial2s(m : Monomial) -> string {
+    foldTree(m.prod, "", \var, deg, acc -> {
+        if (var == "1") acc
+        else if (deg == 1) concatStrings([acc, " * ", var])
+        else if (deg == 0) acc
+        else concatStrings([acc, " * ", var, "^", i2s(deg)])
+    });
+}
+
+polynomial2s(p : Polynomial) -> string {
+    foldTree(p.sum, "", \mono, k, acc -> {
+        if (acc == "") concatStrings(["(", i2s(k), monomial2s(mono), ")"])
+        else concatStrings([acc, " + (", i2s(k), monomial2s(mono), ")"]);
+    });
+}
+
+divExpr2ratFunc(e : RatExpr) -> [Polynomial] {
+    switch(e) {
+        Div(l, r) : {
+            [expr2polynomial(l), expr2polynomial(r)];
+        }
+        default : [expr2polynomial(e)];
+    }
+}
+
+ratFunc2s(p : [Polynomial]) -> string {
+    if (length(p) == 1) polynomial2s(p[0])
+    else "[" + polynomial2s(p[0]) + "] / [" + polynomial2s(p[1]) + "]";
 }
