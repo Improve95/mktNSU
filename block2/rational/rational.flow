@@ -20,50 +20,50 @@ export {
         Const : (number : int);
         Neg : (RatExpr : RatExpr);
 
-    ratNum : (n : int, d : int);
+    RatNum : (n : int, d : int);
 
-    reNum2s(rat : Maybe<ratNum>) -> string;
+    reNum2s(rat : Maybe<RatNum>) -> string;
     s2re(str : string) -> RatExpr;
     re2s(v : RatExpr, priority : int) -> string;
-    calcRe(v : RatExpr, params : Tree<string, ratNum>) -> Maybe<ratNum>;
+    calcRe(v : RatExpr, params : Tree<string, RatNum>) -> Maybe<RatNum>;
 }
 
-sumRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> {
+sumRatNum(l : Maybe<RatNum>, r : Maybe<RatNum>) -> Maybe<RatNum> {
     if (isSome(l) && isSome(r)) {
-        newL = either(l, ratNum(0,0));
-        newR = either(r, ratNum(0,0));
+        newL = either(l, RatNum(0,0));
+        newR = either(r, RatNum(0,0));
 
         nok = lcm(newL.d, newR.d);
         newNumerator = nok / newL.d * newL.n + nok / newR.d * newR.n;
         newDenominator = nok;
 
         nod = iabs(gcd(newNumerator, newDenominator));
-        Some(ratNum(newNumerator / nod, newDenominator / nod));
+        Some(RatNum(newNumerator / nod, newDenominator / nod));
     } else {
         None();
     }
 }
 
-subRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> {
+subRatNum(l : Maybe<RatNum>, r : Maybe<RatNum>) -> Maybe<RatNum> {
     if (isSome(l) && isSome(r)) {
-        newL = either(l, ratNum(0,0));
-        newR = either(r, ratNum(0,0));
+        newL = either(l, RatNum(0,0));
+        newR = either(r, RatNum(0,0));
 
         nok = lcm(newL.d, newR.d);
         newNumerator = nok / newL.d * newL.n - nok / newR.d * newR.n;
         newDenominator = nok;
 
         nod = iabs(gcd(newNumerator, newDenominator));
-        Some(ratNum(newNumerator / nod, newDenominator / nod));
+        Some(RatNum(newNumerator / nod, newDenominator / nod));
     } else {
         None();
     }
 }
 
-mulRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B * C/D
+mulRatNum(l : Maybe<RatNum>, r : Maybe<RatNum>) -> Maybe<RatNum> { // A/B * C/D
     if (isSome(l) && isSome(r)) {
-        newL = either(l, ratNum(0,0));
-        newR = either(r, ratNum(0,0));
+        newL = either(l, RatNum(0,0));
+        newR = either(r, RatNum(0,0));
 
         nodAD = iabs(gcd(newL.n, newR.d));
         nodBC = iabs(gcd(newL.d, newR.n));
@@ -71,16 +71,16 @@ mulRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B * C/D
         newDenominator = newL.d / nodBC * newR.d / nodAD;
 
         nod = iabs(gcd(newNumerator, newDenominator));
-        Some(ratNum(newNumerator / nod, newDenominator / nod));
+        Some(RatNum(newNumerator / nod, newDenominator / nod));
     } else {
         None();
     }
 }
 
-divRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B / C/D
+divRatNum(l : Maybe<RatNum>, r : Maybe<RatNum>) -> Maybe<RatNum> { // A/B / C/D
     if (isSome(l) && isSome(r)) {
-        newL = either(l, ratNum(0,0));
-        newR = either(r, ratNum(0,0));
+        newL = either(l, RatNum(0,0));
+        newR = either(r, RatNum(0,0));
 
         nodAC = iabs(gcd(newL.n, newR.n));
         nodBD = iabs(gcd(newL.d, newR.d));
@@ -92,16 +92,16 @@ divRatNum(l : Maybe<ratNum>, r : Maybe<ratNum>) -> Maybe<ratNum> { // A/B / C/D
             None();
         } else {
             nod = iabs(gcd(newNumerator, newDenominator));
-            Some(ratNum(newNumerator / nod, newDenominator / nod));
+            Some(RatNum(newNumerator / nod, newDenominator / nod));
         }
     } else {
         None();
     }
 }
 
-reNum2s(rat : Maybe<ratNum>) -> string {
+reNum2s(rat : Maybe<RatNum>) -> string {
     if (isSome(rat)) {
-        newRat = either(rat, ratNum(0,0));
+        newRat = either(rat, RatNum(0,0));
         if (newRat.d == 0) "Division by zero..."
         else if (newRat.d == 1) i2s(newRat.n)
         else i2s(newRat.n) + "/" + i2s(newRat.d);
@@ -170,14 +170,14 @@ re2s(v : RatExpr, priority : int) -> string {
 	}
 }
 
-calcRe(v : RatExpr, params : Tree<string, ratNum>) -> Maybe<ratNum> {
+calcRe(v : RatExpr, params : Tree<string, RatNum>) -> Maybe<RatNum> {
     switch (v) {
         Sum(a, b) : sumRatNum(calcRe(a, params), calcRe(b, params));
         Mul(a, b) : mulRatNum(calcRe(a, params), calcRe(b, params));
         Div(a, b) : divRatNum(calcRe(a, params), calcRe(b, params));
         Sub(a, b) : subRatNum(calcRe(a, params), calcRe(b, params));
-        Neg(a)    : mulRatNum(Some(ratNum(-1, 1)), calcRe(a, params)); 
-        Const(a)  : Some(ratNum(a, 1));
+        Neg(a)    : mulRatNum(Some(RatNum(-1, 1)), calcRe(a, params)); 
+        Const(a)  : Some(RatNum(a, 1));
         Var(a)    : lookupTree(params, a);
     }
 }

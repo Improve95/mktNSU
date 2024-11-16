@@ -1,0 +1,43 @@
+import labs/block2/rational/rationalDiff;
+
+/*
+Реализуйте функцию преобразования алгебраического выражения в рациональную функцию (отношение двух многочленов).
+*/
+
+export {
+    toCommon(e : RatExpr) -> Div;
+}
+
+toCommon(e : RatExpr) -> Div {
+    switch(e) {
+        Mul(l, r) : {
+            leftCommon = toCommon(l);
+            rightCommon = toCommon(r);
+            Div(Mul(leftCommon.l, rightCommon.l), 
+                Mul(leftCommon.r, rightCommon.r));
+        }
+        Div(l, r) : {
+            leftCommon = toCommon(l);
+            rightCommon = toCommon(r);
+            Div(Mul(leftCommon.l, rightCommon.r), Mul(leftCommon.r, rightCommon.l));
+        }
+        Sub(l, r) : {
+            leftCommon = toCommon(l);
+            rightCommon = toCommon(r);
+            Div(Sub(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
+                    Mul(leftCommon.r, rightCommon.r));
+        }
+        Sum(l, r) : {
+            leftCommon = toCommon(l);
+            rightCommon = toCommon(r);
+            Div(Sum(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
+                    Mul(leftCommon.r, rightCommon.r));
+        }
+        Neg(val) : {
+            value = toCommon(val);
+            Div(Neg(value.l), value.r);
+        }
+        Var(name) : Div(Var(name), Const(1));
+        Const(c) : Div(Const(c), Const(1));
+    }
+}
