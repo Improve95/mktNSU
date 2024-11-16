@@ -1,18 +1,6 @@
 import labs/block2/rational/polynomRatV2;
 
 main() {
-    /* v1 */
-    /* 
-    testPolynom = "((20 + y) * x + x) / (4 * x)";
-    exp = s2re(testPolynom);
-    println(re2s(exp, 0));
-    
-    params = makeTree();
-    polynom = calculatePolynomRatArr(exp, params, [Var("a"), Var("c"), Var("x"), Var("y")], Var("x"));
-    println(ratPolynom2s(polynom));
-    */
-
-    /* v2 */
     testPolynom = s2re("x + 1 / x");
 
     vars = [Pair("x", RatNum(2, 1))];
@@ -23,18 +11,6 @@ main() {
 
     res = calcRe(simpleExpr, tree);
     println(reNum2s(res));
-
-
-    /* v4 */
-    /* 
-    testPolynom = "(1 / x) * (3 + y) / (5 - x)";
-    expr = s2re(testPolynom);
-
-    vars = [Pair("x", 2), Pair("y", 3)];
-    varsTree = setTreeValues(TreeEmpty(), vars);
-
-    println(ratFunc2s(divExpr2ratFunc(expr2commonDenum(expr))));
-     */
 
     quit(0);
 }

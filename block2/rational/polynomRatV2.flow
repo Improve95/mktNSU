@@ -1,9 +1,5 @@
 import labs/block2/rational/rationalDiff;
 
-/*
-Реализуйте функцию преобразования алгебраического выражения в рациональную функцию (отношение двух многочленов).
-*/
-
 export {
     toCommon(e : RatExpr) -> Div;
 }
