@@ -72,18 +72,6 @@ negRat(arg : Rational) {
     Rational(-arg.n, arg.d);
 }
 
-expr2s(e : RatExpr) -> string {
-    switch (e) {
-        Const(c) : i2s(c);
-        Mul(l, r) : "(" + expr2s(l) + " * " + expr2s(r) + ")";
-        Sum(l, r) : "(" + expr2s(l) + " + " + expr2s(r) + ")";
-        Sub(l, r) : "(" + expr2s(l) + " - " + expr2s(r) + ")";
-        Div(l, r) : "(" + expr2s(l) + " / " + expr2s(r) + ")";
-        Neg(arg) : "(-" + expr2s(arg) + ")";
-        Var(x) : x;
-    }
-}
-
 expr2rat(e: RatExpr, vars : Tree<string, int>) -> Rational {
     switch (e) {
         Const(c) : i2rat(c);
@@ -282,3 +270,14 @@ ratFunc2s(p : [Polynomial]) -> string {
     if (length(p) == 1) polynomial2s(p[0])
     else "[" + polynomial2s(p[0]) + "] / [" + polynomial2s(p[1]) + "]";
 }
+
+/* ratPolynom2s(rat : Maybe<ratPolynom>) -> string {
+    if (isSome(rat)) {
+        newRat = either(rat, ratPolynom(Const(0),Const(0)));
+        if (newRat.denominator == Const(0)) "Division by zero..."
+        else if (newRat.denominator == Const(1)) re2s(newRat.numerator, 0)
+        else re2s(newRat.numerator , 0) + "/" + re2s(newRat.denominator, 0);
+    } else {
+        "Calculate error...";
+    }
+} */

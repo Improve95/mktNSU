@@ -8,23 +8,6 @@ Transform(from : RatExpr, to : RatExpr);
 
 MatchResult(result : bool, context : Tree<string, RatExpr>);
 
-transform(from : string, to : string) -> Transform {
-    Transform(s2re(from), s2re(to));
-}
-
-transformations = [
-    // transform("x + y", "y + x"),
-    transform("x + x", "2 * x"),
-    // transform("x + y + z", "y + z + x"),
-    transform("x + 0", "x"),
-    transform("x * 1", "x"),
-    transform("x - x", "0"),
-    transform("0 * x", "0"), 
-    transform("x * a + x * b", "x * (a + b)"),
-    transform("x * x - y * y", "(x + y) * (x - y)")
-];
-
-
 matchCheck (e1 : RatExpr, e2 : RatExpr, context : Tree<string, RatExpr>) -> MatchResult {
     switch (e1) {
         Const(val1) : {
@@ -118,6 +101,23 @@ tryTransformExprByRule(e : RatExpr, t : Transform) -> RatExpr {
     if (matchResult.result == false) e
     else transformExprWithContext(t.to, matchResult.context);
 }
+
+transform(from : string, to : string) -> Transform {
+    Transform(s2re(from), s2re(to));
+}
+
+
+transformations = [
+    // transform("x + y", "y + x"),
+    transform("x + x", "2 * x"),
+    // transform("x + y + z", "y + z + x"),
+    transform("x + 0", "x"),
+    transform("x * 1", "x"),
+    transform("x - x", "0"),
+    transform("0 * x", "0"), 
+    transform("x * a + x * b", "x * (a + b)"),
+    transform("x * x - y * y", "(x + y) * (x - y)")
+];
 
 transformExprByAllRules(e : RatExpr) -> RatExpr {
     e1 = fold(transformations, e, \exp, t -> {
