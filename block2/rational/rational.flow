@@ -12,13 +12,13 @@ import math/math;
 
 export {
     RatExpr ::= Sum, Mul, Sub, Div, Const, Var, Neg;
-        Sum : (l : RatExpr, r : RatExpr);
-        Mul : (l : RatExpr, r : RatExpr);
-        Sub : (l : RatExpr, r : RatExpr);
-        Div : (l : RatExpr, r : RatExpr);
-        Var : (var : string);
-        Const : (number : int);
-        Neg : (RatExpr : RatExpr);
+    Sum : (l : RatExpr, r : RatExpr);
+    Mul : (l : RatExpr, r : RatExpr);
+    Sub : (l : RatExpr, r : RatExpr);
+    Div : (l : RatExpr, r : RatExpr);
+    Var : (var : string);
+    Const : (number : int);
+    Neg : (RatExpr : RatExpr);
 
     RatNum : (n : int, d : int);
 
