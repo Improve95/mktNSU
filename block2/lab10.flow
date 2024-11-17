@@ -1,60 +1,32 @@
-// import labs/block2/rational/polynomRatSimpleV4;
 import labs/block2/rational/polynomRatSimplify;
 
 main() {
-    /* v4 */
-    /* 
-    // testPolynom = "(x * 2 + 0) + x * 3";
     testPolynom = "x + y + z + y";
     println("str:" + testPolynom);
     println("");
 
     polynomExpr = s2re(testPolynom);
 
-    simplePolynomExpr = maxTransform(polynomExpr);
+    rules2 = [
+        convertToRule("(x + 0)", "x"),
+        convertToRule("(0 + x)", "x"),
+        convertToRule("(x * 1)", "x"),
+        convertToRule("(1 * x)", "x"),
+        convertToRule("(x - x)", "0"),
+        convertToRule("(0 * x)", "0"), 
+        convertToRule("(x * 0)", "0"), 
+        convertToRule("x * a + x * b", "x * (a + b)"),
+        convertToRule("x * x - y * y", "(x + y) * (x - y)"),
+        convertToRule("x + x", "2 * x"),
 
-    println("// ====== //");
-
-    println(re2s(simplePolynomExpr, 0));
-
-    vars = [Pair("x", RatNum(3, 2)), Pair("y", RatNum(2, 2))];
-    tree = setTreeValues(TreeEmpty(), vars);
-
-    res = calcRe(simplePolynomExpr, tree);
-    // println(reNum2s(res));
-     */
-
-    /* v5 */
-
-    // testPolynom = "x * 1 * x - 5 * 5";
-    // testPolynom = "(0 + x * 2) + x * 3";
-    testPolynom = "x + y + z + y";
-    println("str:" + testPolynom);
-    println("");
-
-    polynomExpr = s2re(testPolynom);
-
-    rules = [
-        "x*1=x",
-        "1*x=x",
-        "x+0=x",
-        "0+x=x",
-        "x-x=0",
-        "y+x=x+y",
-        "x+x=2*x",
-        "a+b+c=b+c+a"
+        convertToRule("x + y", "y + x"),
+        convertToRule("x + y + z", "y + z + x"),
     ];
-    
-    // Парсим правила в массив структур MyRule
-    rulesArr = map(rules, parseRules);
 
-    // Упрощаем выражение с использованием правил
-    simplePolynomExpr = simplifyPolynom(polynomExpr, rulesArr);
+    simplePolynomExpr = simplifyPolynom(polynomExpr, rules2);
 
-    // Выводим упрощенное выражение
     println("simple polynom: " + re2s(simplePolynomExpr, 0));
 
-    // Считаем
     vars = [Pair("x", RatNum(3, 2)), Pair("y", RatNum(2, 2)), Pair("z", RatNum(4, 5))];
     tree = setTreeValues(TreeEmpty(), vars);
 

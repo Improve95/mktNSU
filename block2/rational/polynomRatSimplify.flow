@@ -3,6 +3,7 @@ import labs/block2/rational/polynomRat;
 export {
     simplifyPolynom(expr: RatExpr, rules: [MyRule]) -> RatExpr;
     parseRules(rule: string) -> MyRule;
+    convertToRule(rule1 : string, rule2 : string) -> MyRule;
 }
 
 // Определение типа MyRule для правил
@@ -268,9 +269,6 @@ simplifyPolynom(expr: RatExpr, rules: [MyRule]) -> RatExpr {
     });
 }
 
-// Функция для парсинга строки правила в структуру MyRule
-parseRules(rule: string) -> MyRule {
-    index = strFindFirstOf(rule, "=");
-
-    MyRule(s2re(strLeft(rule, index)), s2re(strRight(rule, index+1)));
+convertToRule(rule1 : string, rule2 : string) -> MyRule {
+    MyRule(s2re(rule1), s2re(rule2));
 }
