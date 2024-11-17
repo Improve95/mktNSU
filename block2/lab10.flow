@@ -41,15 +41,19 @@ main() {
 
     /* v5 */
 
-    testPolynom = "(x * 2 + 0) + x * 3";
-    // testPolynom = "x + y + z + y";
+    // testPolynom = "x * 1 * x - 5 * 5";
+    // testPolynom = "(0 + x * 2) + x * 3";
+    testPolynom = "x + y + z + y";
     println("str:" + testPolynom);
     println("");
 
     polynomExpr = s2re(testPolynom);
 
     rules = [
+        "x*1=x",
+        "1*x=x",
         "x+0=x",
+        "0+x=x",
         "x-x=0",
         "y+x=x+y",
         "x+x=2*x",
@@ -66,7 +70,7 @@ main() {
     println("simple polynom: " + re2s(simplePolynomExpr, 0));
 
     // Считаем
-    vars = [Pair("x", RatNum(3, 2)), Pair("y", RatNum(2, 2))];
+    vars = [Pair("x", RatNum(3, 2)), Pair("y", RatNum(2, 2)), Pair("z", RatNum(4, 5))];
     tree = setTreeValues(TreeEmpty(), vars);
 
     res = calcRe(simplePolynomExpr, tree);

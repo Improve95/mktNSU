@@ -238,13 +238,13 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
 // Функция для вычисления размера выражения
 size(expr: RatExpr) {
     switch(expr) {
-        Sum(left, right): size(left) + 2 + size(right);
-        Sub(left, right): size(left) + 2 + size(right);
-        Mul(left, right): size(left) + 1 + size(right);
-        Div(left, right): size(left) + 1 + size(right);
-        Neg(e): size(e) + 1;
-        Const(num): 1;
-        Var(name): 1;
+        Sum(left, right): size(left) + size(right);
+        Sub(left, right): size(left) + size(right);
+        Mul(left, right): size(left) + size(right);
+        Div(left, right): size(left) + size(right);
+        Neg(e): size(e);
+        Const(num): 1.1;
+        Var(name): 1.2;
     }
 }
 
