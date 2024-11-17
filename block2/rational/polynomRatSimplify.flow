@@ -18,10 +18,8 @@ maybeSub = maybeMap2(\l, r -> Sub(l, r));
 maybeMul = maybeMap2(\l, r -> Mul(l, r));
 maybeDiv = maybeMap2(\l, r -> Div(l, r));
 
-// Функция для сравнения выражений и создания замен
 compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tree> {
     switch(ruleLeft) {
-        // Если левая часть правила является бинарным выражением
         Sum(left, right): {
             switch(expr) {
                 Sum(l, r): {
@@ -54,7 +52,6 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
                 default: None();
             }
         }
-        // Если левая часть правила является отрицанием
         Neg(e): {
             switch(expr: RatExpr) {
                 Neg(f): {
@@ -63,7 +60,6 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
                 default: None();
             }
         }
-        // Если левая часть правила является целым числом
         Const(num): {
             switch(expr: RatExpr) {
                 Const(num1): {
@@ -76,7 +72,6 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
                 default: None();
             }
         }
-        // Если левая часть правила является переменной
         Var(name): {
             arg = maybeBind(replacement, \e -> lookupTree(e, name));
 
@@ -96,16 +91,12 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
     }
 }
 
-// Функция для применения правила к выражению
 applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
     switch(ruleRight) {
-        // Если правило является бинарным выражением
         Sum(left, right): {
-            // Применяем правило к левому и правому подвыражениям
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
 
-            // Создаем новое бинарное выражение
             maybeSum(leftValue, rightValue);
         }
         Sub(left, right): {
@@ -126,26 +117,20 @@ applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
 
             maybeDiv(leftValue, rightValue);
         }
-        // Если правило является отрицанием
         Neg(e): {
-            // Применяем правило к подвыражению
             val = applyRule(e, replacement);
             maybeMap(val, \c -> Neg(c));
         }
-        // Если правило является целым числом
         Const(num): {
             Some(Const(num));
         }
-        // Если правило является переменной
         Var(name): {
             lookupTree(replacement, name);
         }
     }
 }
 
-// Функция для попытки применения правила к выражению
 tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
-    // Сравниваем выражение с левой частью правила и создаем замены
     replacements = compare(expr, rule.left, Some(makeTree()));
     maybeBind(replacements, \repl -> applyRule(rule.right, repl));
 }
@@ -212,7 +197,6 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
         Var(name): initSet;
     }
 
-    // Применяем правила к всем формам выражения
     appliedRules = mergeSets(allForms, foldSet(allForms, makeSet(), \setI, exprI -> {
         mergeSets(setI, fold(rules, makeSet(), \setJ, rule -> {
             switch(exprI) {
@@ -222,7 +206,6 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
         }));
     }));
 
-    // Объединяем результаты применения правил
     foldSet(differenceSets(appliedRules, res), mergeSets(res, appliedRules), \acc, e -> {
         switch (e) {
             None(): acc;
@@ -233,7 +216,6 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
     });
 }
 
-// Функция для вычисления размера выражения
 size(expr: RatExpr) {
     switch(expr) {
         Sum(left, right): size(left) + size(right);
@@ -246,12 +228,9 @@ size(expr: RatExpr) {
     }
 }
 
-// Функция для упрощения выражения с использованием правил
 simplifyPolynom(expr: RatExpr, rules: [MyRule]) -> RatExpr {
-    // Применяем все правила к выражению
     set = applyAllRules(expr, rules, makeSet1(Some(expr)));
     
-    // Выбираем самое простое выражение
     foldSet(set, expr, \exprI, i -> {
         switch(i) {
             None(): exprI;
