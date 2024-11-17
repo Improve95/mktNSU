@@ -6,7 +6,7 @@ main() {
 
     expr = s2re(testDifferential);
 
-    diffExpr = differentiation(expr, Var("x"));
+    diffExpr = diffRe(expr, Var("x"));
     println(re2s(diffExpr, 0));
 
     params = setTreeValues(makeTree(), [Pair("x", RatNum(1, 2))]);

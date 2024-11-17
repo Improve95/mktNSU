@@ -1,22 +1,7 @@
-// import labs/block2/rational/polynomRatSimpleV2;
 // import labs/block2/rational/polynomRatSimpleV4;
-import labs/block2/rational/polynomRatSimpleV5;
+import labs/block2/rational/polynomRatSimplify;
 
 main() {
-    /* v2 */
-    /* 
-    expr2 = s2re("w + i + z + i");
-
-    res = simplifyExprByRules(expr2, 
-    [
-        convertToRule("x + y", "x + y"),
-        convertToRule("x + x", "2 * x"),
-        convertToRule("a + b + c", "b + c + a"),
-    ]);
-
-    println(re2s(res, 0)); 
-     */
-
     /* v4 */
     /* 
     // testPolynom = "(x * 2 + 0) + x * 3";

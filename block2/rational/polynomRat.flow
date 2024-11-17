@@ -1,36 +1,40 @@
 import labs/block2/rational/rationalDiff;
 
+/* 
+    re2polynom - rational expression to polynom 
+*/
+
 export {
-    toCommon(e : RatExpr) -> Div;
+    re2polynom(e : RatExpr) -> Div;
 }
 
-toCommon(e : RatExpr) -> Div {
+re2polynom(e : RatExpr) -> Div {
     switch(e) {
         Mul(l, r) : {
-            leftCommon = toCommon(l);
-            rightCommon = toCommon(r);
+            leftCommon = re2polynom(l);
+            rightCommon = re2polynom(r);
             Div(Mul(leftCommon.l, rightCommon.l), 
                 Mul(leftCommon.r, rightCommon.r));
         }
         Div(l, r) : {
-            leftCommon = toCommon(l);
-            rightCommon = toCommon(r);
+            leftCommon = re2polynom(l);
+            rightCommon = re2polynom(r);
             Div(Mul(leftCommon.l, rightCommon.r), Mul(leftCommon.r, rightCommon.l));
         }
         Sub(l, r) : {
-            leftCommon = toCommon(l);
-            rightCommon = toCommon(r);
+            leftCommon = re2polynom(l);
+            rightCommon = re2polynom(r);
             Div(Sub(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
                     Mul(leftCommon.r, rightCommon.r));
         }
         Sum(l, r) : {
-            leftCommon = toCommon(l);
-            rightCommon = toCommon(r);
+            leftCommon = re2polynom(l);
+            rightCommon = re2polynom(r);
             Div(Sum(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
                     Mul(leftCommon.r, rightCommon.r));
         }
         Neg(val) : {
-            value = toCommon(val);
+            value = re2polynom(val);
             Div(Neg(value.l), value.r);
         }
         Var(name) : Div(Var(name), Const(1));

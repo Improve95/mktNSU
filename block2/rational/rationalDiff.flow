@@ -1,33 +1,35 @@
 import labs/block2/rational/rational;
 
+
+
 export {
-    differentiation(ex : RatExpr, var : Var) -> RatExpr;
-    simplification(e : RatExpr) -> RatExpr;
+    diffRe(ex : RatExpr, var : Var) -> RatExpr;
+    re2simpleRe(e : RatExpr) -> RatExpr;
 }
 
-differentiation(ex : RatExpr, var : Var) -> RatExpr {
+diffRe(ex : RatExpr, var : Var) -> RatExpr {
     switch (ex) {
         Mul(a, b) : 
-            simplification( Sum(
-                simplification( Mul(differentiation(a, var), b) ), 
-                simplification( Mul(a, differentiation(b, var)) ))
+            re2simpleRe( Sum(
+                re2simpleRe( Mul(diffRe(a, var), b) ), 
+                re2simpleRe( Mul(a, diffRe(b, var)) ))
             );
         Sum(a, b) : 
-            simplification( Sum(
-                differentiation(a, var), 
-                differentiation(b, var))
+            re2simpleRe( Sum(
+                diffRe(a, var), 
+                diffRe(b, var))
             );
         Sub(a, b) : 
-            simplification( Sub(
-                differentiation(a, var), 
-                differentiation(b, var))
+            re2simpleRe( Sub(
+                diffRe(a, var), 
+                diffRe(b, var))
             );
         Div(a, b) : 
-            simplification( Div(
-                simplification( Sub(
-                    simplification( Mul(differentiation(a, var), b) ), 
-                    simplification( Mul(a, differentiation(b, var))) ) ), 
-                simplification( Mul(b, b) ))
+            re2simpleRe( Div(
+                re2simpleRe( Sub(
+                    re2simpleRe( Mul(diffRe(a, var), b) ), 
+                    re2simpleRe( Mul(a, diffRe(b, var))) ) ), 
+                re2simpleRe( Mul(b, b) ))
             );
         Var(a) : 
             if (a == var.var) Const(1)
@@ -35,15 +37,15 @@ differentiation(ex : RatExpr, var : Var) -> RatExpr {
         Const(a) : 
             Const(0);
         Neg(a) : 
-            simplification( Neg(differentiation(a, var)) );
+            re2simpleRe( Neg(diffRe(a, var)) );
     }
 }
 
-simplification(e : RatExpr) -> RatExpr {
+re2simpleRe(e : RatExpr) -> RatExpr {
     switch(e) {
         Mul(l, r) : {
-            simpleLeft = simplification(l);
-            simpleRight = simplification(r);
+            simpleLeft = re2simpleRe(l);
+            simpleRight = re2simpleRe(r);
             if (simpleLeft == Const(1)) {
                 simpleRight;
             } else if (simpleRight == Const(1)) {
@@ -55,8 +57,8 @@ simplification(e : RatExpr) -> RatExpr {
             }
         }
         Div(l, r) : {
-            simpleLeft = simplification(l);
-            simpleRight = simplification(r);
+            simpleLeft = re2simpleRe(l);
+            simpleRight = re2simpleRe(r);
             if (simpleLeft == Const(0)) {
                 Const(0);
             } else if (simpleRight == Const(1)) {
@@ -68,8 +70,8 @@ simplification(e : RatExpr) -> RatExpr {
             }
         }
         Sum(l, r) : {
-            simpleLeft = simplification(l);
-            simpleRight = simplification(r);
+            simpleLeft = re2simpleRe(l);
+            simpleRight = re2simpleRe(r);
             if (simpleLeft == Const(0)) {
                 simpleRight;
             } else if (simpleRight == Const(0)) {
@@ -79,8 +81,8 @@ simplification(e : RatExpr) -> RatExpr {
             }
         }
         Sub(l, r) : {
-            simpleLeft = simplification(l);
-            simpleRight = simplification(r);
+            simpleLeft = re2simpleRe(l);
+            simpleRight = re2simpleRe(r);
             if (simpleLeft == Const(0)) {
                 Neg(simpleRight);
             } else if (simpleRight == Const(0)) {
