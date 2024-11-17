@@ -1,26 +1,24 @@
 import labs/block2/rational/polynomRatSimplify;
 
 main() {
-    testPolynom = "x + y + z + y";
+    testPolynom = "(x * 2 + 0) + x * 3";
+    // testPolynom = "x * 1 * x - 5 * 5";
+    // testPolynom = "2 * y + x + x";
     println("str:" + testPolynom);
-    println("");
 
     polynomExpr = s2re(testPolynom);
 
     rules2 = [
-        convertToRule("(x + 0)", "x"),
-        convertToRule("(0 + x)", "x"),
-        convertToRule("(x * 1)", "x"),
-        convertToRule("(1 * x)", "x"),
-        convertToRule("(x - x)", "0"),
-        convertToRule("(0 * x)", "0"), 
-        convertToRule("(x * 0)", "0"), 
-        convertToRule("x * a + x * b", "x * (a + b)"),
-        convertToRule("x * x - y * y", "(x + y) * (x - y)"),
-        convertToRule("x + x", "2 * x"),
-
-        convertToRule("x + y", "y + x"),
-        convertToRule("x + y + z", "y + z + x"),
+        s2rule("(x + 0)", "x"),
+        s2rule("(0 + x)", "x"),
+        s2rule("(x * 1)", "x"),
+        s2rule("(1 * x)", "x"),
+        s2rule("(x - x)", "0"),
+        s2rule("(0 * x)", "0"), 
+        s2rule("(x * 0)", "0"), 
+        s2rule("x * a + x * b", "x * (a + b)"),
+        s2rule("x * x - y * y", "(x + y) * (x - y)"),
+        s2rule("x + x", "2 * x"),
     ];
 
     simplePolynomExpr = simplifyPolynom(polynomExpr, rules2);
