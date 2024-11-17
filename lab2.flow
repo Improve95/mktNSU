@@ -1,6 +1,9 @@
 import string;
 
 main() {
-    println(fold([1, 2, 3, 4], 0, \x,y -> x+y));
+    println(fold([1, 2, 3, 4], 0, \x,y -> {
+        println("x:" + i2s(x) + " y: " + i2s(y));
+        x+y;
+    }));
     quit(0);
 }

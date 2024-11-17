@@ -10,157 +10,13 @@ export {
     s2rule(rule1 : string, rule2 : string) -> MyRule;
 }
 
-// Определение типа MyRule для правил
 MyRule(left: RatExpr, right: RatExpr);
 
-// Функции для создания бинарных выражений с использованием Maybe
+/* примение функции к maybe, если хоть один будет none, то вернется none */
 maybeSum = maybeMap2(\l, r -> Sum(l, r));
 maybeSub = maybeMap2(\l, r -> Sub(l, r));
 maybeMul = maybeMap2(\l, r -> Mul(l, r));
 maybeDiv = maybeMap2(\l, r -> Div(l, r));
-
-// Функция для применения всех правил к выражению
-applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<Maybe<RatExpr>> {
-    // Инициализация множества с начальным выражением
-    initSet : Set<Maybe<RatExpr>> = makeSet1(Some(expr));
-    // Применение правил к выражению
-    allForms = switch(expr) {
-        Sum(left, right): {
-            // Применяем правила к левому и правому подвыражениям
-            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
-            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
-
-            // Объединяем результаты применения правил
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
-                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
-                    insertSet(setRight, maybeSum(leftI, rightI));
-                }))
-            }));
-        }
-
-        Sub(left, right): {
-            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
-            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
-
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
-                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
-                    insertSet(setRight, maybeSub(leftI, rightI));
-                }))
-            }));
-        }
-
-        Mul(left, right): {
-            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
-            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
-
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
-                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
-                    insertSet(setRight, maybeMul(leftI, rightI));
-                }))
-            }));
-        }
-
-        Div(left, right): {
-            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
-            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
-
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
-                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
-                    insertSet(setRight, maybeDiv(leftI, rightI));
-                }))
-            }));
-        }
-
-        Neg(e): {
-            // Применяем правила к подвыражению
-            set = applyAllRules(e, rules, makeSet1(Some(e)));
-
-            // Объединяем результаты применения правил
-            foldSet(set, makeSet(), \setI, i -> {
-                insertSet(setI, maybeMap(i, \c -> Neg(c)));
-            });
-              
-            mergeSets(initSet, set);
-        }
-
-        Const(num): initSet;
-        Var(name): initSet;
-    }
-
-    // Применяем правила к всем формам выражения
-    appliedRules = mergeSets(allForms, foldSet(allForms, makeSet(), \setI, exprI ->{
-        mergeSets(setI, fold(rules, makeSet(), \setJ, rule -> {
-            switch(exprI) {
-                None(): setJ;
-                Some(a): insertSet(setJ, tryApplyRule(a, rule));
-            }
-        }));
-    }));
-
-    // Объединяем результаты применения правил
-    foldSet(differenceSets(appliedRules, res), mergeSets(res, appliedRules), \acc, e -> {
-        switch (e) {
-            None(): acc;
-            Some(a):{
-                mergeSets(acc, applyAllRules(a, rules, acc));
-            }
-        }
-    });
-}
-
-// Функция для применения правила к выражению
-applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
-    switch(ruleRight) {
-        // Если правило является бинарным выражением
-        Sum(left, right): {
-            // Применяем правило к левому и правому подвыражениям
-            leftValue = applyRule(left, replacement);
-            rightValue = applyRule(right, replacement);
-
-            // Создаем новое бинарное выражение
-            maybeSum(leftValue, rightValue);
-        }
-        Sub(left, right): {
-            leftValue = applyRule(left, replacement);
-            rightValue = applyRule(right, replacement);
-
-            maybeSub(leftValue, rightValue);
-        }
-        Mul(left, right): {
-            leftValue = applyRule(left, replacement);
-            rightValue = applyRule(right, replacement);
-
-            maybeMul(leftValue, rightValue);
-        }
-        Div(left, right): {
-            leftValue = applyRule(left, replacement);
-            rightValue = applyRule(right, replacement);
-
-            maybeDiv(leftValue, rightValue);
-        }
-        // Если правило является отрицанием
-        Neg(e): {
-            // Применяем правило к подвыражению
-            val = applyRule(e, replacement);
-            maybeMap(val, \c -> Neg(c));
-        }
-        // Если правило является целым числом
-        Const(num): {
-            Some(Const(num));
-        }
-        // Если правило является переменной
-        Var(name): {
-            lookupTree(replacement, name);
-        }
-    }
-}
-
-// Функция для попытки применения правила к выражению
-tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
-    // Сравниваем выражение с левой частью правила и создаем замены
-    replacements = compare(expr, rule.left, Some(makeTree()));
-    maybeBind(replacements, \repl -> applyRule(rule.right, repl));
-}
 
 // Функция для сравнения выражений и создания замен
 compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tree> {
@@ -238,6 +94,143 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
             }
         }
     }
+}
+
+// Функция для применения правила к выражению
+applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
+    switch(ruleRight) {
+        // Если правило является бинарным выражением
+        Sum(left, right): {
+            // Применяем правило к левому и правому подвыражениям
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            // Создаем новое бинарное выражение
+            maybeSum(leftValue, rightValue);
+        }
+        Sub(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeSub(leftValue, rightValue);
+        }
+        Mul(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeMul(leftValue, rightValue);
+        }
+        Div(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeDiv(leftValue, rightValue);
+        }
+        // Если правило является отрицанием
+        Neg(e): {
+            // Применяем правило к подвыражению
+            val = applyRule(e, replacement);
+            maybeMap(val, \c -> Neg(c));
+        }
+        // Если правило является целым числом
+        Const(num): {
+            Some(Const(num));
+        }
+        // Если правило является переменной
+        Var(name): {
+            lookupTree(replacement, name);
+        }
+    }
+}
+
+// Функция для попытки применения правила к выражению
+tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
+    // Сравниваем выражение с левой частью правила и создаем замены
+    replacements = compare(expr, rule.left, Some(makeTree()));
+    maybeBind(replacements, \repl -> applyRule(rule.right, repl));
+}
+
+applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<Maybe<RatExpr>> {
+    initSet : Set<Maybe<RatExpr>> = makeSet1(Some(expr));
+
+    allForms = switch(expr) {
+        Sum(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> { 
+                    insertSet(setRight, maybeSum(leftI, rightI));
+                }));
+            }));
+        }
+
+        Sub(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeSub(leftI, rightI));
+                }))
+            }));
+        }
+
+        Mul(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeMul(leftI, rightI));
+                }))
+            }));
+        }
+
+        Div(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeDiv(leftI, rightI));
+                }))
+            }));
+        }
+
+        Neg(e): {
+            set = applyAllRules(e, rules, makeSet1(Some(e)));
+
+            foldSet(set, makeSet(), \setI, i -> {
+                insertSet(setI, maybeMap(i, \c -> Neg(c)));
+            });
+              
+            mergeSets(initSet, set);
+        }
+
+        Const(num): initSet;
+        Var(name): initSet;
+    }
+
+    // Применяем правила к всем формам выражения
+    appliedRules = mergeSets(allForms, foldSet(allForms, makeSet(), \setI, exprI -> {
+        mergeSets(setI, fold(rules, makeSet(), \setJ, rule -> {
+            switch(exprI) {
+                None(): setJ;
+                Some(a): insertSet(setJ, tryApplyRule(a, rule));
+            }
+        }));
+    }));
+
+    // Объединяем результаты применения правил
+    foldSet(differenceSets(appliedRules, res), mergeSets(res, appliedRules), \acc, e -> {
+        switch (e) {
+            None(): acc;
+            Some(a):{
+                mergeSets(acc, applyAllRules(a, rules, acc));
+            }
+        }
+    });
 }
 
 // Функция для вычисления размера выражения
