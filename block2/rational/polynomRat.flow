@@ -11,27 +11,27 @@ export {
 re2polynom(e : RatExpr) -> Div {
     switch(e) {
         Mul(l, r) : {
-            leftCommon = re2polynom(l);
-            rightCommon = re2polynom(r);
-            Div(Mul(leftCommon.l, rightCommon.l), 
-                Mul(leftCommon.r, rightCommon.r));
+            lPolynom = re2polynom(l);
+            rPolynom = re2polynom(r);
+            Div(Mul(lPolynom.l, rPolynom.l), 
+                Mul(lPolynom.r, rPolynom.r));
         }
         Div(l, r) : {
-            leftCommon = re2polynom(l);
-            rightCommon = re2polynom(r);
-            Div(Mul(leftCommon.l, rightCommon.r), Mul(leftCommon.r, rightCommon.l));
+            lPolynom = re2polynom(l);
+            rPolynom = re2polynom(r);
+            Div(Mul(lPolynom.l, rPolynom.r), Mul(lPolynom.r, rPolynom.l));
         }
         Sub(l, r) : {
-            leftCommon = re2polynom(l);
-            rightCommon = re2polynom(r);
-            Div(Sub(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
-                    Mul(leftCommon.r, rightCommon.r));
+            lPolynom = re2polynom(l);
+            rPolynom = re2polynom(r);
+            Div(Sub(Mul(lPolynom.l, rPolynom.r), Mul(rPolynom.l, lPolynom.r)), 
+                    Mul(lPolynom.r, rPolynom.r));
         }
         Sum(l, r) : {
-            leftCommon = re2polynom(l);
-            rightCommon = re2polynom(r);
-            Div(Sum(Mul(leftCommon.l, rightCommon.r), Mul(rightCommon.l, leftCommon.r)), 
-                    Mul(leftCommon.r, rightCommon.r));
+            lPolynom = re2polynom(l);
+            rPolynom = re2polynom(r);
+            Div(Sum(Mul(lPolynom.l, rPolynom.r), Mul(rPolynom.l, lPolynom.r)), 
+                    Mul(lPolynom.r, rPolynom.r));
         }
         Neg(val) : {
             value = re2polynom(val);
