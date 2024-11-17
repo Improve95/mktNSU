@@ -1,7 +1,7 @@
 import labs/block2/rational/polynomRat;
 
 main() {
-    testPolynom = "x + 1 / x";
+    testPolynom = "(x + 1) / x";
 
     ratExpr = s2re(testPolynom);
 
@@ -14,7 +14,7 @@ main() {
     tree = setTreeValues(TreeEmpty(), vars);
 
     res = calcRe(simpleExpr, tree);
-    println("res " + reNum2s(res));
+    println("res: " + reNum2s(res));
 
     quit(0);
 }
