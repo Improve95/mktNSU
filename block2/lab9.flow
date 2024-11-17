@@ -1,20 +1,20 @@
 import labs/block2/rational/polynomRat;
 
 main() {
-    testPolynom = "x + 0 / x";
+    testPolynom = "x + 1 / x";
 
     ratExpr = s2re(testPolynom);
 
     polynomExpr = re2polynom(ratExpr);
 
     simpleExpr = re2simpleRe(polynomExpr);
-    println(re2s(simpleExpr, 0));
+    println("polynom: " + re2s(simpleExpr, 0));
 
     vars = [Pair("x", RatNum(2, 1))];
     tree = setTreeValues(TreeEmpty(), vars);
 
     res = calcRe(simpleExpr, tree);
-    println(reNum2s(res));
+    println("res " + reNum2s(res));
 
     quit(0);
 }
