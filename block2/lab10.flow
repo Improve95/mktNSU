@@ -1,5 +1,6 @@
 // import labs/block2/rational/polynomRatSimpleV2;
-import labs/block2/rational/polynomRatSimpleV4;
+// import labs/block2/rational/polynomRatSimpleV4;
+import labs/block2/rational/polynomRatSimpleV5;
 
 main() {
     /* v2 */
@@ -17,7 +18,7 @@ main() {
      */
 
     /* v4 */
-    
+    /* 
     // testPolynom = "(x * 2 + 0) + x * 3";
     testPolynom = "x + y + z + y";
     println("str:" + testPolynom);
@@ -36,7 +37,40 @@ main() {
 
     res = calcRe(simplePolynomExpr, tree);
     // println(reNum2s(res));
+     */
+
+    /* v5 */
+
+    testPolynom = "(x * 2 + 0) + x * 3";
+    // testPolynom = "x + y + z + y";
+    println("str:" + testPolynom);
+    println("");
+
+    polynomExpr = s2re(testPolynom);
+
+    rules = [
+        "x+0=x",
+        "x-x=0",
+        "y+x=x+y",
+        "x+x=2*x",
+        "a+b+c=b+c+a"
+    ];
     
+    // Парсим правила в массив структур MyRule
+    rulesArr = map(rules, parseRules);
+
+    // Упрощаем выражение с использованием правил
+    simplePolynomExpr = simplifyPolynom(polynomExpr, rulesArr);
+
+    // Выводим упрощенное выражение
+    println("simple polynom: " + re2s(simplePolynomExpr, 0));
+
+    // Считаем
+    vars = [Pair("x", RatNum(3, 2)), Pair("y", RatNum(2, 2))];
+    tree = setTreeValues(TreeEmpty(), vars);
+
+    res = calcRe(simplePolynomExpr, tree);
+    println("res: " + reNum2s(res));
 
     quit(0);
 }

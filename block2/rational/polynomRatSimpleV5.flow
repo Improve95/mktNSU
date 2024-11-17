@@ -1,51 +1,88 @@
 import labs/block2/rational/polynomRatV2;
 
-import string;
-import ds/array;
-import ds/tree;
-import ds/set;
-import lingo/pegcode/driver;
+export {
+    simplifyPolynom(expr: RatExpr, rules: [MyRule]) -> RatExpr;
+    parseRules(rule: string) -> MyRule;
+}
 
-maybeSum = maybeMap2(\l, r -> Binary(l, r, SumOp()));
-maybeSub = maybeMap2(\l, r -> Binary(l, r, SubOp()));
-maybeMul = maybeMap2(\l, r -> Binary(l, r, MulOp()));
-maybeDiv = maybeMap2(\l, r -> Binary(l, r, DivOp()));
-
+// Определение типа MyRule для правил
 MyRule(left: RatExpr, right: RatExpr);
 
+// Функции для создания бинарных выражений с использованием Maybe
+maybeSum = maybeMap2(\l, r -> Sum(l, r));
+maybeSub = maybeMap2(\l, r -> Sub(l, r));
+maybeMul = maybeMap2(\l, r -> Mul(l, r));
+maybeDiv = maybeMap2(\l, r -> Div(l, r));
+
+// Функция для применения всех правил к выражению
 applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<Maybe<RatExpr>> {
+    // Инициализация множества с начальным выражением
     initSet : Set<Maybe<RatExpr>> = makeSet1(Some(expr));
+    // Применение правил к выражению
     allForms = switch(expr) {
-        Binary(left, right, operation): {
+        Sum(left, right): {
+            // Применяем правила к левому и правому подвыражениям
             leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
             rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
 
-            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI -> {
+            // Объединяем результаты применения правил
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
                 mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
-                    insertSet(setRight, 
-                        switch(operation) {
-                            SumOp(): maybeSum(leftI, rightI);
-                            SubOp(): maybeSub(leftI, rightI);
-                            MulOp(): maybeMul(leftI, rightI);
-                            DivOp(): maybeDiv(leftI, rightI);
-                        }
-                    );
+                    insertSet(setRight, maybeSum(leftI, rightI));
                 }))
             }));
         }
+
+        Sub(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeSub(leftI, rightI));
+                }))
+            }));
+        }
+
+        Mul(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeMul(leftI, rightI));
+                }))
+            }));
+        }
+
+        Div(left, right): {
+            leftSet = applyAllRules(left, rules, makeSet1(Some(left)));
+            rightSet = applyAllRules(right, rules, makeSet1(Some(right)));
+
+            mergeSets(initSet, foldSet(leftSet, makeSet(), \setLeft, leftI ->{
+                mergeSets(setLeft, foldSet(rightSet, makeSet(), \setRight, rightI -> {
+                    insertSet(setRight, maybeDiv(leftI, rightI));
+                }))
+            }));
+        }
+
         Neg(e): {
+            // Применяем правила к подвыражению
             set = applyAllRules(e, rules, makeSet1(Some(e)));
 
+            // Объединяем результаты применения правил
             foldSet(set, makeSet(), \setI, i -> {
                 insertSet(setI, maybeMap(i, \c -> Neg(c)));
             });
               
             mergeSets(initSet, set);
         }
-        Int(num): initSet;
+
+        Const(num): initSet;
         Var(name): initSet;
     }
 
+    // Применяем правила к всем формам выражения
     appliedRules = mergeSets(allForms, foldSet(allForms, makeSet(), \setI, exprI ->{
         mergeSets(setI, fold(rules, makeSet(), \setJ, rule -> {
             switch(exprI) {
@@ -55,6 +92,7 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
         }));
     }));
 
+    // Объединяем результаты применения правил
     foldSet(differenceSets(appliedRules, res), mergeSets(res, appliedRules), \acc, e -> {
         switch (e) {
             None(): acc;
@@ -65,51 +103,97 @@ applyAllRules(expr: RatExpr, rules: [MyRule], res: Set<Maybe<RatExpr>>) -> Set<M
     });
 }
 
-applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr>{
+// Функция для применения правила к выражению
+applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
     switch(ruleRight) {
-        Binary(left, right, operation): {
+        // Если правило является бинарным выражением
+        Sum(left, right): {
+            // Применяем правило к левому и правому подвыражениям
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
 
-            switch(operation) {
-                SumOp(): maybeSum(leftValue, rightValue);
-                SubOp(): maybeSub(leftValue, rightValue);
-                MulOp(): maybeMul(leftValue, rightValue);
-                DivOp(): maybeDiv(leftValue, rightValue);
-            }
+            // Создаем новое бинарное выражение
+            maybeSum(leftValue, rightValue);
         }
+        Sub(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeSub(leftValue, rightValue);
+        }
+        Mul(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeMul(leftValue, rightValue);
+        }
+        Div(left, right): {
+            leftValue = applyRule(left, replacement);
+            rightValue = applyRule(right, replacement);
+
+            maybeDiv(leftValue, rightValue);
+        }
+        // Если правило является отрицанием
         Neg(e): {
+            // Применяем правило к подвыражению
             val = applyRule(e, replacement);
             maybeMap(val, \c -> Neg(c));
         }
-        Int(num): {
-            Some(Int(num));
+        // Если правило является целым числом
+        Const(num): {
+            Some(Const(num));
         }
+        // Если правило является переменной
         Var(name): {
             lookupTree(replacement, name);
         }
     }
 }
 
+// Функция для попытки применения правила к выражению
 tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
+    // Сравниваем выражение с левой частью правила и создаем замены
     replacements = compare(expr, rule.left, Some(makeTree()));
     maybeBind(replacements, \repl -> applyRule(rule.right, repl));
 }
 
+// Функция для сравнения выражений и создания замен
 compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tree> {
     switch(ruleLeft) {
-        Binary(left, right, operation): {
+        // Если левая часть правила является бинарным выражением
+        Sum(left, right): {
             switch(expr) {
-                Binary(l, r, op): {
-                    if (op == operation) {
-                        compare(r, right, compare(l, left, replacement));
-                    } else {
-                        None();
-                    }
+                Sum(l, r): {
+                    compare(r, right, compare(l, left, replacement));
                 }
                 default: None();
             }
         }
+        Sub(left, right): {
+            switch(expr) {
+                Sub(l, r): {
+                    compare(r, right, compare(l, left, replacement));
+                }
+                default: None();
+            }
+        }
+        Mul(left, right): {
+            switch(expr) {
+                Mul(l, r): {
+                    compare(r, right, compare(l, left, replacement));
+                }
+                default: None();
+            }
+        }
+        Div(left, right): {
+            switch(expr) {
+                Div(l, r): {
+                    compare(r, right, compare(l, left, replacement));
+                }
+                default: None();
+            }
+        }
+        // Если левая часть правила является отрицанием
         Neg(e): {
             switch(expr: RatExpr) {
                 Neg(f): {
@@ -118,9 +202,10 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
                 default: None();
             }
         }
-        Int(num): {
+        // Если левая часть правила является целым числом
+        Const(num): {
             switch(expr: RatExpr) {
-                Int(num1): {
+                Const(num1): {
                     if(num1 == num) {
                         replacement;
                     } else {
@@ -130,6 +215,7 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
                 default: None();
             }
         }
+        // Если левая часть правила является переменной
         Var(name): {
             arg = maybeBind(replacement, \e -> lookupTree(e, name));
 
@@ -149,17 +235,25 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
     }
 }
 
+// Функция для вычисления размера выражения
 size(expr: RatExpr) {
     switch(expr) {
-        Binary(left, right, op): size(left) + 1 + size(right);
+        Sum(left, right): size(left) + 2 + size(right);
+        Sub(left, right): size(left) + 2 + size(right);
+        Mul(left, right): size(left) + 1 + size(right);
+        Div(left, right): size(left) + 1 + size(right);
         Neg(e): size(e) + 1;
-        Int(num): 1;
+        Const(num): 1;
         Var(name): 1;
     }
 }
 
-simplify(expr: RatExpr, rules: [MyRule]) -> RatExpr {
+// Функция для упрощения выражения с использованием правил
+simplifyPolynom(expr: RatExpr, rules: [MyRule]) -> RatExpr {
+    // Применяем все правила к выражению
     set = applyAllRules(expr, rules, makeSet1(Some(expr)));
+    
+    // Выбираем самое простое выражение
     foldSet(set, expr, \exprI, i -> {
         switch(i) {
             None(): exprI;
@@ -174,68 +268,9 @@ simplify(expr: RatExpr, rules: [MyRule]) -> RatExpr {
     });
 }
 
-expr2str(expr: RatExpr) -> string {
-    switch (expr) {
-        Binary(left, right, op): {
-            "(" + expr2str(left) + 
-            switch(op) {
-                SumOp(): " + ";
-                SubOp(): " - ";
-                MulOp(): " * ";
-                DivOp(): " / ";
-            } + expr2str(right) + ")";
-        }
-        Int(num): i2s(num);
-        Var(letter): letter;
-        Neg(e): "(" + "- " + expr2str(e) + ")";
-    }
-}
-
-parse(str: string) {
-    makeSub = \exprs: [flow] -> {
-        fold(exprs[1], exprs[0], \acc, x -> Binary(acc, x, SubOp()));
-    };
-
-    makeDiv = \exprs: [flow] -> {
-        fold(exprs[1], exprs[0], \acc, x -> Binary(acc, x, DivOp()));
-    };
-
-    parsic(
-        compilePegGrammar("#include labs/rl/ast/v5/grammar_2.lingo"),
-        str,
-        SemanticActions(
-            setTree(
-                setTree(
-                    defaultPegActions.t,
-                    "makeSub",
-                    makeSub
-                ),
-                "makeDiv",
-                makeDiv
-            )
-        )
-    );
-}
-
+// Функция для парсинга строки правила в структуру MyRule
 parseRules(rule: string) -> MyRule {
     index = strFindFirstOf(rule, "=");
 
-    MyRule(parse(strLeft(rule, index)), parse(strRight(rule, index+1)));
-}
-
-
-main() {
-    expression = "w + i + z + i";
-
-    rules = [
-        "y+x=x+y",
-        "x+x=2*x",
-        "a+b+c=b+c+a"
-    ];
-    
-    rulesArr = map(rules, parseRules);
-
-    r = simplify(parse(expression), rulesArr);
-    println(expr2str(r));
-    quit(0);
+    MyRule(s2re(strLeft(rule, index)), s2re(strRight(rule, index+1)));
 }

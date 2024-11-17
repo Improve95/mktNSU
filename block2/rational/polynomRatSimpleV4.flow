@@ -107,15 +107,15 @@ convertToRule(from : string, to : string) -> RuleExpr {
 }
 
 transformations = [
-    convertToRule("x + y", "y + x"),
+    // convertToRule("x + y", "y + x"),
     convertToRule("x + x", "2 * x"),
     // convertToRule("x + y + z", "y + z + x"),
-    // convertToRule("x + 0", "x"),
-    // convertToRule("x * 1", "x"),
-    // convertToRule("x - x", "0"),
-    // convertToRule("0 * x", "0"), 
-    // convertToRule("x * a + x * b", "x * (a + b)"),
-    // convertToRule("x * x - y * y", "(x + y) * (x - y)")
+    convertToRule("x + 0", "x"),
+    convertToRule("x * 1", "x"),
+    convertToRule("x - x", "0"),
+    convertToRule("0 * x", "0"), 
+    convertToRule("x * a + x * b", "x * (a + b)"),
+    convertToRule("x * x - y * y", "(x + y) * (x - y)")
 ];
 
 transformExprByAllRules(e : RatExpr) -> RatExpr {
@@ -141,7 +141,6 @@ maxTransform(e : RatExpr) -> RatExpr {
     println("");
     println(newExpr);
 
-    newExpr;
-    // if (newExpr == e) e
-    // else maxTransform(newExpr);
+    if (newExpr == e) e
+    else maxTransform(newExpr);
 }
