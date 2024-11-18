@@ -20,7 +20,9 @@ main() {
         s2rule("(x * 0)", "0"), 
         s2rule("x * a + x * b", "x * (a + b)"),
         s2rule("x * x - y * y", "(x + y) * (x - y)"),
-        s2rule("a + a", "2 * a"),
+        s2rule("x + x", "2 * x"),
+        s2rule("x + y", "y + x"),
+        s2rule("x + y + z", "y + z + x"),
     ];
 
     simplePolynomExpr = simplifyPolynom(polynomExpr, rules2);
