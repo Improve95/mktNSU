@@ -74,18 +74,15 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
         }
         Var(name): {
             arg = maybeBind(replacement, \e -> lookupTree(e, name));
-            println(arg);
             switch(arg) {
                 Some(v): {
                     if(v == expr) {
-                        println("return replacement");
                         replacement;
                     } else {
                         None();
                     }
                 }
                 None(): {
-                    println("add node in replacement");
                     maybeMap(replacement, \c -> setTree(c, name, expr));
                 }
             }
@@ -94,20 +91,14 @@ compare(expr: RatExpr, ruleLeft: RatExpr, replacement: Maybe<Tree>) -> Maybe<Tre
 }
 
 applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
-    println("applyRule: rule right");
-    println(ruleRight);
     switch(ruleRight) {
         Sum(left, right): {
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
-            println("applyRule: sum");
-            println(leftValue);
-            println(rightValue);
 
             maybeSum(leftValue, rightValue);
         }
         Sub(left, right): {
-            println("applyRule: sub");
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
 
@@ -116,44 +107,31 @@ applyRule(ruleRight: RatExpr, replacement: Tree) -> Maybe<RatExpr> {
         Mul(left, right): {
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
-            println("applyRule: mul");
-            println(leftValue);
-            println(rightValue);
 
             maybeMul(leftValue, rightValue);
         }
         Div(left, right): {
-            println("applyRule: div");
             leftValue = applyRule(left, replacement);
             rightValue = applyRule(right, replacement);
 
             maybeDiv(leftValue, rightValue);
         }
         Neg(e): {
-            println("applyRule: neg");
             val = applyRule(e, replacement);
             maybeMap(val, \c -> Neg(c));
         }
         Const(num): {
-            println("applyRule: const");
             Some(Const(num));
         }
         Var(name): {
-            rep = lookupTree(replacement, name);
-            println("applyRule: var");
-            println(rep);
-            rep;
+            lookupTree(replacement, name);
         }
     }
 }
 
 tryApplyRule(expr: RatExpr, rule: MyRule) -> Maybe<RatExpr> {
     replacements = compare(expr, rule.left, Some(makeTree()));
-    println("");
-    println(replacements);
-    println("");
     maybeBind(replacements, \repl -> { 
-        println("call"); 
         applyRule(rule.right, repl); 
     });
 }

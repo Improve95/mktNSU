@@ -1,25 +1,26 @@
 import labs/block2/rational/polynomRatSimplify;
 
 main() {
-    testPolynom = "2 * x + 2 * y";
+    // testPolynom = "2 * x + 2 * y";
     // testPolynom = "(x * 2 + 0) + x * 3";
     // testPolynom = "x * 1 * x - 5 * 5";
     // testPolynom = "2 * y + x + x";
+    testPolynom = "x + y + z + y + x"
     println("str:" + testPolynom);
 
     polynomExpr = s2re(testPolynom);
 
     rules2 = [
-        // s2rule("(x + 0)", "x"),
-        // s2rule("(0 + x)", "x"),
-        // s2rule("(x * 1)", "x"),
-        // s2rule("(1 * x)", "x"),
-        // s2rule("(x - x)", "0"),
-        // s2rule("(0 * x)", "0"), 
-        // s2rule("(x * 0)", "0"), 
+        s2rule("(x + 0)", "x"),
+        s2rule("(0 + x)", "x"),
+        s2rule("(x * 1)", "x"),
+        s2rule("(1 * x)", "x"),
+        s2rule("(x - x)", "0"),
+        s2rule("(0 * x)", "0"), 
+        s2rule("(x * 0)", "0"), 
         s2rule("x * a + x * b", "x * (a + b)"),
-        // s2rule("x * x - y * y", "(x + y) * (x - y)"),
-        // s2rule("a + a", "2 * a"),
+        s2rule("x * x - y * y", "(x + y) * (x - y)"),
+        s2rule("a + a", "2 * a"),
     ];
 
     simplePolynomExpr = simplifyPolynom(polynomExpr, rules2);
