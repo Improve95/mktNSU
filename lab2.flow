@@ -1,6 +1,0 @@
-import string;
-
-main() {
-    println(fold([1, 2, 3, 4], 0, \x,y -> x+y));
-    quit(0);
-}
