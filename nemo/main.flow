@@ -1,0 +1,37 @@
+import labs/nemo/validate;
+
+main() {
+	nemoProgText = 
+	"
+		VAR n: INT; 
+		VAR x: INT; 
+		VAR y: INT; 
+		VAR tmp : INT; 
+		VAR array : [INT];
+		{
+			n := 12; x := 0; y := 0;
+			{
+				{
+					(y <= n)?;
+					y := (y + (x + (x + 1)));
+					x := (x + 1);
+				}*;
+				(NOT (y <= n))?;
+			};
+			x := (x - 1);
+		}
+	"
+
+	nemoProg = s2nemo(nemoProgText);
+	println(nemoProg);
+	println("");
+	
+	switch(CheckProg(nemoProg)) {
+		Error(info) : println("ERROR: " + info);
+		Success(info) : {
+			println("success");
+		}
+	}
+
+	quit(0);
+}
