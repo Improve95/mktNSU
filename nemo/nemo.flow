@@ -22,10 +22,10 @@ export {
     Loop	   : (bodies : [Body]);
 
     nemoTerm  ::= ArrayExpr, ArithExpr;
-    ArithExpr ::= Add, Mul, Sub, Div, Var, Int, Neg, Apply;
+    ArithExpr ::= Sum, Mul, Sub, Div, Var, Int, Neg, Apply;
     Sub : (e1 : ArithExpr, e2 : ArithExpr);
     Div : (e1 : ArithExpr, e2 : ArithExpr);
-    Add : (e1 : ArithExpr, e2 : ArithExpr);
+    Sum : (e1 : ArithExpr, e2 : ArithExpr);
     Mul : (e1 : ArithExpr, e2 : ArithExpr);
     Neg : (e1 : ArithExpr);
     Int : (e1 : int);
@@ -51,17 +51,22 @@ export {
 	s2nemo : (str : string) -> NemoAst;
 }
 
+buildSub(xs : [flow]) { fold(xs[1], xs[0], \acc, x -> Sub(acc, x)); }
+buildDiv(xs : [flow]) { fold(xs[1], xs[0], \acc, x -> Div(acc, x)); }
+
 BuildProg(declAndProg: [flow]) {
 	decl = elementAt(declAndProg, 0, []);
 	prog = elementAt(declAndProg, 1, Sequence([]));
 	NemoAst(decl, prog);
 }
 
-BuildChoice(bs : [flow]) {Choice(concatA(bs))}
-BuildArray(bs : [flow]) {Array(concatA(bs))}
+BuildChoice(bs : [flow]) { Choice(concatA(bs)) }
+BuildArray(bs : [flow]) { Array(concatA(bs)) }
 
 specialPegActions = {
 	t = setTreeValues(defaultPegActions.t, [
+		Pair("buildSub", buildSub),
+		Pair("buildDiv", buildDiv),
 		Pair("BuildProg", BuildProg),
 		Pair("BuildChoice", BuildChoice),
 		Pair("BuildArray", BuildArray)]);

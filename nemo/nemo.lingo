@@ -1,17 +1,17 @@
-prog = ws decl*:d ws body:b ws {  BuildProg(:d, :b)  };
+prog = ws decl*:d ws body:b ws { BuildProg(:d, :b) };
 
-decl = ws "VAR" ws var:v ws ":" ws type:t ws ";" ws { Decl(:v, :t)  };
+decl = ws "VAR" ws var:v ws ":" ws type:t ws ";" ws { Decl(:v, :t) };
 type = arrayType | int;
-arrayType = ws "[" ws type:t ws "]" { ArrayType(:t)  };
+arrayType = ws "[" ws type:t ws "]" { ArrayType(:t) };
 int = ws "INT" { IntType() };
 
 body = assignment | test | loop | choice | seq;
 assignment = ws var:v ws ":=" ws expression:e { Assignment(:v, :e) };
 test = ws "(" ws logicF:f ws ")" ws "?" { Test(:f) };
-loop = ws "{ " ws seqBody*:bs ws " }" ws "*" { Loop(:bs) };
-choice = ws "{ " ws body+:b ws choiceBody*:bs ws " }" { BuildChoice(:b, :bs) };
+loop = ws "{" ws seqBody*:bs ws "}" ws "*" { Loop(:bs) };
+choice = ws "{" ws body+:b ws choiceBody*:bs ws "}" { BuildChoice(:b, :bs) };
 choiceBody = ws "U" ws body:b ws { :b }; 
-seq = ws "{ " ws seqBody*:bs ws " }" { Sequence(:bs) };
+seq = ws "{" ws seqBody*:bs ws "}" { Sequence(:bs) };
 seqBody = ws body:b ws ";" ws { :b };
 
 logicF = logicOp | lAtom | lneg;
@@ -28,34 +28,25 @@ ge  = ws arithExpr:e1 ws ">=" ws arithExpr:e2 { Ge(:e1, :e2) };
 g   = ws arithExpr:e1 ws ">" ws arithExpr:e2  { G(:e1, :e2) };
 
 expression = arithExpr | arrayExpr;
-arithExpr = number | var | neg | apply | sum | mul | div | sub;
-sum = ws "(" ws arithExpr:e1 ws "+" ws arithExpr:e2 ws ")" {Add(:e1, :e2)};
-mul = ws "(" ws arithExpr:e1 ws "*" ws arithExpr:e2 ws ")" {Mul(:e1, :e2)};
-div = ws "(" ws arithExpr:e1 ws "/" ws arithExpr:e2 ws ")" {Div(:e1, :e2)};
-sub = ws "(" ws arithExpr:e1 ws "-" ws arithExpr:e2 ws ")" {Sub(:e1, :e2)};
-neg = ws "-" ws arithExpr:e {Neg(:e)};
-apply = ws "APP" ws "(" ws arrayExpr:v ws "," ws expression:at ws ")" {Apply(:v, :at)};
 
-// expression = arithExpr | arrayExpr;
+arithExpr = ws sum:e { :e };
+sum = ws sub:l ws "+" ws sum:r ws { Sum(:l, :r) } | sub;
+sub = ws mul:l ws rsub+:r ws { buildSub(:l, :r) } | mul;
+rsub = ws '-' ws mul:e ws { :e };
+mul = ws div:l ws "*" ws mul:r ws { Mul(:l, :r) } | div;
+div = unary:l ws rdiv+:r ws { buildDiv(:l, :r) } | unary;
+rdiv = ws '/' ws unary:e ws { :e };
+unary = ws '-' ws staples:e ws { Neg(:e) } | staples;
+staples = ws atom:e ws { :e } | ws '(' ws sum:e ws ')' ws { :e };
+atom = ws apply:e { :e } ws | ws const:e ws { :e } | ws var:e ws { :e };
 
-// arithExpr = ws sum:e { :e };
-// sum = ws sub:l ws "+" ws sum:r ws { Sum(:l, :r) } | sub;
-// sub = ws mul:l ws rsub+:r ws { buildSub(:l, :r) } | mul;
-// rsub = ws '-' ws mul:e ws { :e };
-// mul = ws div:l ws "*" ws mul:r ws { Mul(:l, :r) } | div;
-// div = unary:l ws rdiv+:r ws { buildDiv(:l, :r) } | unary;
-// rdiv = ws '/' ws unary:e ws { :e };
-// unary = ws '-' ws staples:e ws { Neg(:e) } | staples;
-// staples = ws atom:e ws { :e } | ws '(' ws sum:e ws ')' ws { :e };
-// atom = ws apply:e { :e } ws | ws const:e ws { :e } | ws var:e ws { :e };
-
-// apply = ws "APP" ws "(" ws arrayExpr:v ws "," ws expression:at ws ")" { Apply(:v, :at) };
+apply = ws "APP" ws "(" ws arrayExpr:v ws "," ws expression:at ws ")" { Apply(:v, :at) };
 
 arrayExpr = upd | var | array;
 upd = ws "UPD" ws "(" ws arrayExpr:v ws "," ws expression:at ws "," ws expression:to ws ")" { Upd(:v, :at, :to ) };
 array = ws "[" ws arithExpr+:el ws elemOfArray*:el2 ws "]" { BuildArray(:el, :el2) };
 elemOfArray = ws "," ws arithExpr:el ws { :el };
 
-number = ('0'-'9')+$d ws { Const(s2i($d)) };
-var = ('a'-'z')+$name { Var($name) };
-ws = (' ' | '\r' | '\n' | '\t')*;
+const = ('0' - '9')+ $d { Int(s2i($d)) };
+var = ('a' - 'z')+ $v { Var($v) };
+ws = (" " | "\t" | "\n" | "\r")*;
