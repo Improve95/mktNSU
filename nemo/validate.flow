@@ -35,7 +35,7 @@ getTermType(typeMap : Tree<string, Type>, term : nemoTerm) -> Type {
 	switch (term) {
 		Sub(e1, e2) : binaryOperationType(e1, e2);
 		Div(e1, e2) : binaryOperationType(e1, e2);
-		Add(e1, e2) : binaryOperationType(e1, e2);
+		Sum(e1, e2) : binaryOperationType(e1, e2);
 		Mul(e1, e2) : binaryOperationType(e1, e2);
 		Neg(e1) : getTermType(typeMap, e1);
 		Int(e1) : IntType();
