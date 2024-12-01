@@ -1,0 +1,25 @@
+import lingo/lab11/parser;
+import lingo/lab11/vm_parser;
+import lingo/lab11/translator;
+import lingo/lab11/executor;
+
+
+main() {
+    strProgram = "#include lingo/lab11/test.txt";
+
+    program = parseStringToProgram(strProgram);
+    println(program);
+    println("\n");
+
+    strVmProgram = translateProgramToVm(program);
+    println(strVmProgram);
+    println("\n");
+
+    vmProgram = parseVmProgram(strVmProgram);
+    println(vmProgram);
+    println("\n");
+
+    executeVmProgram(vmProgram);
+
+    quit(0);
+}

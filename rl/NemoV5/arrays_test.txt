@@ -1,0 +1,7 @@
+VAR x: INT; VAR n: [INT];
+{
+	x := 1; 
+	n := [1, 2, 3]; 
+	x := APP(n, 2); 
+	n := UPD(n, 1, 8)
+}

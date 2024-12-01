@@ -1,0 +1,249 @@
+import runtime;
+import ds/tree;
+import string;
+
+export {
+    vmProg : (decl: [vmDecl], body: [vmLine]);
+    printvmProg(prog: vmProg) -> void;
+    exec(prog: vmProg) -> void;
+    
+    vmDecl : (v: vmVar, t: vmType);
+    vmLine : (label: int, instruction: vmInstruction, goto: [int]);
+
+    vmInstruction ::= vmPrint, vmAssign, vmTest;
+    vmPrint : (e: vmExpr);
+    vmTest : (b: vmBool);
+    vmAssign : (v: vmVar, e: vmExpr);
+
+    vmType ::= vmIntType, vmArrayType;
+    vmIntType : ();
+    vmArrayType : (t: vmType);
+
+    vmVal ::= vmArray, vmInt;
+
+    vmExpr ::= vmArray, vmUpdate, vmUnit;
+    vmUnit ::= vmInt, vmSub, vmAdd, vmDiv, vmMult, vmNegative, vmVar, vmApply;
+
+    vmAdd : (v1: vmUnit, v2: vmUnit);
+    vmSub : (v1: vmUnit, v2: vmUnit);
+    vmMult : (v1: vmUnit, v2 : vmUnit);
+    vmDiv : (v1: vmUnit, v2 : vmUnit);
+    vmNegative : (v: vmUnit);
+    vmInt : (val: int);
+    vmVar : (val: string);
+    vmArray : (e: [vmVal]);
+    vmApply : (arr: vmVar, i: vmExpr);
+    vmUpdate : (arr: vmVar, i: vmExpr, val: vmExpr);
+
+    vmBool ::= vmAnd, vmOr, vmNot, vmPred, vmTrue;
+    vmTrue : ();
+    vmAnd : (b1: vmBool, b2: vmBool);
+    vmOr : (b1: vmBool, b2: vmBool);
+    vmNot : (b: vmBool);
+    vmPred : (e1: vmExpr, e2: vmExpr, c: vmCondition);
+    vmCondition ::= vmEq, vmNotEq, vmLsEq, vmGrEq, vmLs, vmGr;
+    vmEq(); vmNotEq(); vmLsEq(); vmGrEq(); vmLs(); vmGr();
+}
+//todo [vars]
+vmState : (s : [Pair<int,Tree<string, vmVal>>] );
+// vmState : (l: [int], vars: Tree<string, vmVal>);
+
+// initVmState(prog: vmProg) {
+//     vmState(
+//         [0],
+//         d2t(prog.decl)
+//     )
+// }
+initVmState(prog: vmProg) {
+    vmState(
+        [Pair(
+            0,
+            d2t(prog.decl)
+        )]
+    )
+}
+mapState(goto: [int], t: Tree<string, vmVal>) {
+    vmState(map(goto, \e -> Pair(e, t)))
+}
+
+exec(prog: vmProg) -> void {
+    init = 0;
+    limit = 100;
+    _exec(
+        prog.body,
+        initVmState(prog),
+        init,
+        limit
+    )
+}
+ 
+_exec(body: [vmLine], state: vmState, cur: int, limit: int) -> void {
+    end = length(body);
+    newState = fold(state.s, vmState([]), \acc, e-> {
+        // println(e);
+        s = execLine(body[e.first], e.second);
+        vmState(filter(concat(acc.s, s.s), \ee->ee.first != end))
+    });
+    if (length(newState.s) > 0 && cur < limit) {
+        _exec(body, newState, cur + 1, limit);
+    } else {
+        if (length(newState.s) > 0 && cur >= limit)
+            println("Nemo virtual machine stopped execution. Iterations limit exceeded.")
+        else 
+            println("Nemo virtual machine finished execution.")
+    }
+}
+
+execLine(line: vmLine, vars: Tree<string, vmVal>) -> vmState {
+    switch (line.instruction) {
+        // vmAssign(v,e): vmState(line.goto, setTree(vars, v.val, eval(e, vars)));
+        vmAssign(v,e): {
+            t = setTree(vars, v.val, eval(e, vars));
+            mapState(line.goto, t);
+        }
+        vmTest(b): if (cmp(b, vars)) mapState(line.goto, vars) else vmState([]);
+        vmPrint(e): {
+            println(val2s(eval(e, vars)));
+            mapState(line.goto, vars);
+        }
+    }
+}
+
+eval(e: vmExpr, vars: Tree<string, vmVal>) -> vmVal {
+    switch(e) {
+        vmInt(v): e;
+        vmArray(v): e;
+        vmAdd(v1,v2): biEval(v1,v2, vars, \a,b -> a + b);
+        vmSub(v1,v2): biEval(v1,v2, vars, \a,b -> a - b);
+        vmMult(v1,v2): biEval(v1,v2, vars, \a,b -> a * b);
+        vmDiv(v1,v2): biEval(v1,v2, vars, \a,b -> a / b);
+        vmNegative(v): vmInt(evali(v, vars));
+        vmVar(x): findVar(e, vars);
+        vmApply(v1,v2): {
+            arr = findVar(v1,vars);
+            ind = evali(v2, vars);
+            getByIndex(arr, ind);
+        }
+        vmUpdate(v1,v2,v3): {
+            val = eval(v3, vars);
+            ind = evali(v2, vars);
+            setByIndex(v1,ind,val,vars);
+        }
+    }
+}
+
+biEval(v1: vmExpr, v2: vmExpr, vars: Tree<string, vmVal>, fn: (int,int)->int) -> vmInt {
+    vmInt(fn(
+        evali(v1, vars),
+        evali(v2, vars)
+    ))
+}
+
+evali(e: vmExpr, vars: Tree<string, vmVal>) -> int {
+    val2i(eval(e, vars));
+}
+
+setByIndex(arv: vmVar, ind: int, val: vmVal, vars: Tree<string, vmVal> ) {
+    arr = switch(findVar(arv,vars)) {
+        vmArray(e): e;
+        vmInt(v): {
+            terminateWithError("Illegal argument. Cannot use update on non-array var.");
+            [];
+        }
+    };
+    len = length(arr);
+    if (ind < len) {
+        vmArray(replace(arr, ind, val));
+    } else {
+        vmArray(concat3(arr, arrayRepeat(vmInt(0), ind - len), [val]))
+    }
+}
+
+getByIndex(arr: vmVal, ind: int) -> vmVal {
+    switch (arr) {
+        vmArray(e): {
+            if (ind < length(e)) {
+                e[ind]
+            } else {
+                terminateWithError("Index "+ i2s(ind) +" out of bound " + i2s(length(e)));
+                vmInt(-1);
+            }
+        }
+        vmInt(v): {
+            terminateWithError("getByIndex(arr): expected vmArray, got vmInt");
+            vmInt(-1);
+        }
+    }
+}
+
+cmp(b: vmBool, vars: Tree<string, vmVal>) -> bool {
+    switch (b) {
+        vmBool(): true;
+        vmAnd(b1,b2): cmp(b1,vars) && cmp(b2,vars);
+        vmOr(b1,b2): cmp(b1,vars) && cmp(b2, vars);
+        vmNot(bb): !cmp(bb, vars);
+        vmPred(v1,v2,c): {
+            vv1 = val2i(eval(v1, vars));
+            vv2 = val2i(eval(v2, vars));
+            switch(c) {
+                vmEq(): vv1 == vv2;
+                vmNotEq(): vv1 != vv2;
+                vmLs(): vv1 < vv2;
+                vmLsEq(): vv1 <= vv2;
+                vmGr(): vv1 > vv2;
+                vmGrEq(): vv1 >= vv2;
+            }
+        }
+    }
+}
+
+findVar(var: vmVar, vars: Tree<string, vmVal>) -> vmVal {
+    v = lookupTree(vars, var.val);
+    switch (v) {
+        Some(vv) : vv;
+        None() : {
+            terminateWithError("Cannot find var: " + var.val);
+            vmInt(-1);
+        }
+    }
+}
+
+val2s(v: vmVal) -> string {
+    switch(v) {
+        vmInt(vv): i2s(vv);
+        vmArray(e): "[" + strGlue(map(e,val2s),", ") + "]";
+    }
+}
+
+val2i(v: vmVal) -> int {
+    switch (v) {
+        vmInt(vv): vv;
+        vmArray(vv): {
+            terminateWithError("Illegal argument. Expected vmInt, found vmArray.");
+            -1;
+        };
+    }
+}
+
+d2t(d: [vmDecl]) -> Tree<string, vmVal> {
+    fold(d, makeTree(), \acc, e -> setTree(acc, e.v.val, initType(e.t)))
+}
+
+initType(t: vmType) -> vmVal {
+    switch(t) {
+        vmIntType(): vmInt(0);
+        vmArrayType(e): vmArray([initType(e)]);
+    }
+}
+
+printvmProg(prog: vmProg) -> void {
+    println("Var declaration");
+    iter(prog.decl, println);
+    println("Program body");
+    iter(prog.body, println);
+}
+
+terminateWithError(msg: string) {
+    println("Runtime error: " + msg);
+    quit(-1);
+}

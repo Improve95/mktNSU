@@ -1,0 +1,40 @@
+vmProgram = ws varDecl*:d ws statement*:s ws { VmProgram(:d, :s) };
+varDecl = ws "VAR" ws var:v ws ":" ws type:t ws ";" ws { VarDecl(:v, :t) };
+type = int | array;
+int = ws "INT" ws { Int() };
+array = ws "[" ws type:t ws "]" ws { Array(:t) };
+
+
+statement = assign | ifelse;
+assign = ws (digit+)$id ws ":" ws var:v ws ":=" ws expr:e ws "goto" ws "{" ws label*:ls ws "}" ws { AssignStatement(s2i($id), :v, :e, :ls) };
+ifelse = ws (digit+)$id ws ":" ws "if" ws "(" ws relation:r ws ")" ws "then" ws "{" ws label*:ifls ws "}" ws "else" ws "{" ws label*:elsels ws "}" ws { IfElseStatement(s2i($id), :r, :ifls, :elsels) };   
+
+
+expr = operand | neg | arExpr | funcExpr;
+neg = ws "-" ws expr:e ws { Neg(:e) };
+arExpr = "(" expr:e1 ws binaryOp$op ws expr:e2 ")" { ArExpr($op, :e1, :e2) };
+funcExpr = app | upd;
+
+
+app = "APP(" expr:a "," ws expr:i ")" { App(:a, :i) };
+upd = "UPD(" expr:a "," ws expr:i "," ws expr:v ")" { Upd(:a, :i, :v) };
+relation = invertRelation | directRelation;
+directRelation = expr:e1 ws compareOp$op ws expr:e2 { DirectRelation($op, :e1, :e2) };
+invertRelation = "NOT(" expr:e1 ws compareOp$op ws expr:e2 ")" { InvertRelation($op, :e1, :e2) };
+
+
+binaryOp = "+" | "-" | "*" | "/";
+compareOp = "==" | "!=" | "<=" | ">=" | "<" | ">";
+
+
+operand = number | var | arrayOfValues;
+arrayOfValues = ws "[" ws number:f ws many*:nums ws "]" ws { ArrayOfValues(:f, :nums) };
+var = ws letter+$v ws { Var($v) };
+number = ws digit+$d ws { Number(s2i($d)) };
+label = ws digit+$d ws ","? ws { Label(s2i($d)) };
+many = "," ws number;
+
+
+digit = '0'-'9';
+letter = 'a'-'z';
+ws = (' ' | '\n' | '\t' | '\r')*;

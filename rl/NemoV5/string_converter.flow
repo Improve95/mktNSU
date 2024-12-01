@@ -1,0 +1,93 @@
+import lingo/lab11/vm_grammar;
+import string;
+import ds/array;
+
+
+export {
+    statement2str(s : Statement) -> string;
+    varDeclaration2str(decls: [VarDecl]) -> string;
+}
+
+
+type2str(type: Type) -> string{
+    switch (type) {
+		Int(): "INT";
+		Array(t): "[" + type2str(t) + "]";
+	}
+}
+
+
+decl2str(decl: VarDecl) -> string {
+    "VAR " + decl.var.name + " : " + type2str(decl.type) + "; ";
+}
+
+
+varDeclaration2str(decls: [VarDecl]) -> string {
+  	strGlue(map(decls, decl2str), "\n"); 
+}
+
+
+label2str(label: Label) -> string {
+    i2s(label.id);
+}
+
+
+// oper2str(o: Operand) -> string {
+//     switch(o) {
+//         Number(n) : i2s(n);
+//         Var(name) : name;
+//         ArrayOfValues(first, nums) : "[" + strGlue(concat([i2s(first.number)],map(nums, \num -> i2s(num.number))), ", ") + "]";
+//     }
+// }
+
+
+expr2str(e: Expr) -> string {
+    switch(e) {
+        Neg(ex) : "-" + expr2str(ex);
+        Number(n) : i2s(n);
+        Var(name) : name;
+        ArrayOfValues(first, nums) : "[" + strGlue(concat([i2s(first.number)], map(nums, \num -> i2s(num.number))), ", ") + "]";
+        ArExpr(op, e1, e2) : "(" + expr2str(e1) + " " + op + " " + expr2str(e2) + ")";
+        App(arr, index) : "APP(" + expr2str(arr) + ", " + expr2str(index) + ")";
+        Upd(arr, index, value) : "UPD(" + expr2str(arr) + ", " + expr2str(index) + ", " + expr2str(value) + ")";
+    }
+}
+
+
+rel2str(r: Relation) -> string {
+    switch(r) {
+        DirectRelation(op, e1, e2) : {
+            "(" + expr2str(r.e1) + " " + r.op + " " + expr2str(r.e2) + ")";
+        }
+        InvertRelation(op, e1, e2) : {
+            "(NOT(" + expr2str(r.e1) + " " + r.op + " " + expr2str(r.e2) + "))";
+        }
+    }
+    
+}
+
+
+body2str(body: Body) -> string {
+    switch(body) {
+        Assign(var, value) : expr2str(var) + ":= " + expr2str(value);
+        Test(r) : "(" + expr2str(r.e1) + " " + r.op + " " + expr2str(r.e2) + ")? ";
+        Choice(h, t) : "(" + strGlue(map(concat([h], t), body2str), " U ") + ")";
+        Composition(h, t) : "{\n" + strGlue(map(concat([h], t), body2str), ";\n") + "}\n";
+        Iteration(b) : "(" +  body2str(b) + ")* ";
+    }
+}
+
+
+statement2str(s : Statement) -> string {
+	switch (s) {
+		AssignStatement(label, var, e, goto): {
+            i2s(label) + ": " + var.name + " := " + expr2str(e) + " goto {" + strGlue(map(goto, label2str), ", ") + "}";
+        }
+		IfElseStatement(label, r, ifGoto, elseGoto):{  
+			i2s(label) + ": " + 
+            "if " + rel2str(r) + " " +
+			"then {" + strGlue(map(ifGoto, label2str), ",") + "} else " + 
+			"{" + strGlue(map(elseGoto, label2str), ",") + "}";
+        }
+	}
+} 

@@ -1,0 +1,45 @@
+program = ws varDecl*:d ws body:b ws { Program(:d, :b) };
+varDecl = ws "VAR" ws var:v ws ":" ws type:t ws ";" ws { VarDecl(:v, :t) };
+
+
+type = int | array;
+int = ws "INT" ws { Int() };
+array = ws "[" ws type:t ws "]" ws { Array(:t) };
+
+
+body = assign | composition | test | iteration | choice;
+choice = "(" ws body:b ws choiceOp+:o ws ")" { Choice(:b, :o) };
+composition = "{" ws body:b ws composeOp+:o ws "}" { Composition(:b, :o) };
+composeOp = ";" ws body;
+iteration = ws "(" ws body:b ws ")*" ws { Iteration(:b) };
+assign = ws var:v ws ":=" ws expr:e ws { Assign(:v, :e) };
+test = ws "(" ws relation:r ws ")?" ws { Test(:r) };
+
+
+expr = operand | neg | arExpr | funcExpr;
+neg = ws "-" ws expr:e ws { Neg(:e) };
+arExpr = "(" expr:e1 ws binaryOp$op ws expr:e2 ")" { ArExpr($op, :e1, :e2) };
+funcExpr = app | upd;
+app = "APP" ws "(" ws expr:a "," ws expr:i ")" ws { App(:a, :i) };
+upd = "UPD(" expr:a "," ws expr:i "," ws expr:v ")" { Upd(:a, :i, :v) };
+relation = invertRelation | directRelation;
+directRelation = expr:e1 ws compareOp$op ws expr:e2 { DirectRelation($op, :e1, :e2) };
+invertRelation = "NOT(" expr:e1 ws compareOp$op ws expr:e2 ")" { InvertRelation($op, :e1, :e2) };
+
+
+binaryOp = "+" | "-" | "*" | "/";
+compareOp = "==" | "!=" | "<=" | ">=" | "<" | ">";
+choiceOp =  "U" ws body;
+
+
+
+operand = var | number | arrayOfValues;
+var = ws letter+$v ws { Var($v) };
+arrayOfValues = ws "[" ws number:f ws many*:nums ws "]" ws { ArrayOfValues(:f, :nums) };
+number = ws digit+$d ws { Number(s2i($d)) };
+many = "," ws number;
+
+
+digit = '0'-'9';
+letter = 'a'-'z';
+ws = (' ' | '\n' | '\t' | '\r')*;

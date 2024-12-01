@@ -1,0 +1,16 @@
+import lingo/lab11/nemo_grammar;
+
+export {
+    VmProgram: (declarations: [VarDecl], statements: [Statement]);
+    
+    Value ::= IntValue, ArrayValue;
+    IntValue(v: int);
+    ArrayValue(a: [Value]);
+
+    Statement ::= AssignStatement, IfElseStatement;
+    AssignStatement: (label: int, var: Var, expr: Expr, goto: [Label]);
+    IfElseStatement: (label: int, r: Relation, ifGoto: [Label], elseGoto : [Label]);
+
+
+    Label(id: int);
+}

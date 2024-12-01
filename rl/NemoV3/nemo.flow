@@ -1,0 +1,180 @@
+import lingo/pegcode/driver;
+import string;
+import runtime;
+
+export {
+    Prog : (d: [Decl], b: Statement);
+
+    Decl : (v: Var, t: Type);
+
+    Type ::= IntType, ArrayType;
+    IntType : ();
+    ArrayType : (t: Type);
+
+    Val ::= Int, Array;
+    Expr ::= Array, Update, Unit;
+    Unit ::= Int, Sub, Add, Div, Mult, Negative, Var, Apply;
+
+    Add : (v1: Unit, v2: Unit);
+    Sub : (v1: Unit, v2: Unit);
+    Mult : (v1: Unit, v2 : Unit);
+    Div : (v1: Unit, v2 : Unit);
+    Negative : (v: Unit);
+    Int : (val: int);
+    Var : (val: string);
+    Array : (e: [Val]);
+    Apply : (arr: Var, i: Expr);
+    Update : (arr: Var, i: Expr, val: Expr);
+    
+    Statement ::= Assign, Test, Sequence, Selection, Iteration, Print;
+    Assign : (v: Var, e: Expr);
+    Sequence : (seq: [Statement]);
+    Selection : (sel: [Statement]);
+    Iteration : (b: Statement);
+    Print : (e: Expr);
+
+    Test : (b: Bool);
+    Bool ::= And, Or, Not, Pred;
+    And : (b1: Bool, b2: Bool);
+    Or : (b1: Bool, b2: Bool);
+    Not : (b: Bool);
+    Pred : (e1: Expr, e2: Expr, c: Condition);
+    Condition ::= Eq, NotEq, LsEq, GrEq, Ls, Gr;
+    Eq(); NotEq(); LsEq(); GrEq(); Ls(); Gr();
+
+    s2ast(s: string) -> Prog;
+    typeSafe_s2ast(s: string) -> Maybe<Prog>;
+}
+
+nemoLingo : ref Maybe<[PegOp]> = ref None();
+buildSub(xs: [flow]) -> Sub;
+buildDiv(xs: [flow]) -> Div;
+buildSel(xs: [flow]) -> Selection;
+buildSeq(xs: [flow]) -> Sequence;
+buildArray(xs: [flow]) -> Array;
+
+buildSub(xs) {
+    fold(xs[1], xs[0], \acc, x -> Sub(acc, x))
+}
+
+buildDiv(xs) {
+    fold(xs[1], xs[0], \acc, x -> Div(acc, x))
+}
+
+buildSel(xs) {
+    Selection(arrayPush(xs[1], xs[0]))
+}
+
+buildSeq(xs) {
+    Sequence(xs[0])
+}
+
+buildArray(xs) {
+    Array(concat(xs[0], xs[1]))
+}
+
+s2ast(s) {
+    parsic(
+        onlyOnce(
+            nemoLingo, \ -> {
+		compilePegGrammar("#include nemo.lingo");
+	    }),
+        s,
+        pegActions(
+            [
+                Pair("buildArray", buildArray),
+                Pair("buildSel", buildSel),
+                Pair("buildSeq", buildSeq),
+                Pair("buildSub", buildSub),
+                Pair("buildDiv", buildDiv)
+            ]
+            )
+        )
+}
+
+findTypeInDecl(v: Var, d: [Decl]) -> Maybe<Type> {
+    maybeMap(find(d, \dd-> dd.v == v), \ee->ee.t)
+}
+
+maybeArrayType(t: Maybe<Type>) -> Maybe<ArrayType> {
+    maybeBind(t, \tt-> switch(tt) { IntType(): None(); ArrayType(at): Some(tt)});
+}
+
+maybeIntType(t: Maybe<Type>) -> Maybe<IntType> {
+    maybeBind(t, \tt-> switch(tt) { IntType(): Some(tt); ArrayType(at): None()});
+}
+
+biIntOpCheck(e1: Expr, e2: Expr, d: [Decl]) -> Maybe<Type> {
+    t1 = maybeIntType(findExpressionType(e1,d));
+    t2 = maybeIntType(findExpressionType(e2,d));
+    maybeBind2(\tt1,tt2-> if(tt1 == tt2) Some(IntType()) else None())(t1,t2);
+}
+
+findExpressionType(e: Expr, d: [Decl]) -> Maybe<Type> {
+    switch(e) {
+        Array(v): {
+            mt = fold(v,
+             findExpressionType(v[0],d),
+             \acc, ee -> maybeBind2(\t1,t2->if(t1==t2) Some(t1)
+              else {println("Type error:" +t2s(t1)+"!="+t2s(t2)); None()})
+              (acc, findExpressionType(ee, d)));
+            maybeBind(mt, \vv->Some(ArrayType(vv)))
+        };
+        Update(arr,ind,val): {
+            arrType = maybeArrayType(findTypeInDecl(arr, d));
+            valType = findExpressionType(val, d);
+            maybeBind2(\e1:ArrayType, e2: Type-> if (e1.t == e2) Some(e1) else None())(arrType, valType);
+        }
+        Int(v): Some(IntType());
+        Var(v): findTypeInDecl(e, d);
+        Apply(arr, ind): maybeMap(maybeArrayType(findTypeInDecl(arr, d)), \at->at.t);
+        Add(v1,v2): biIntOpCheck(v1,v2,d);
+        Sub(v1,v2): biIntOpCheck(v1,v2,d);
+        Div(v1,v2): biIntOpCheck(v1,v2,d);
+        Mult(v1,v2): biIntOpCheck(v1,v2,d);
+        Negative(v): maybeIntType(findExpressionType(v, d));
+    }
+}
+
+t2s(t: Type) {
+    switch(t) {
+        IntType(): "int";
+        ArrayType(at): "[" + t2s(at) + "]";
+    }
+}
+
+checkAssign(a: Assign, d: [Decl]) {
+    var = a.v;
+    varType = findTypeInDecl(var, d);
+    exprType = findExpressionType(a.e, d);
+    println(varType);
+    println(exprType);
+    maybeBind2(\t1,t2-> 
+    if (t1 == t2) Some(a) else {println("Type error: type of var="+ a.v.val + ": "+t2s(t1)+"!="+t2s(t2)); None()})
+    (varType, exprType)
+}
+
+checkTree(s: Statement, d: [Decl], flag: bool) -> bool {
+    if (!flag) {
+        false;
+    } else {
+        switch(s) {
+            Assign(v,e): isSome(checkAssign(s,d));
+            Test(p): true;
+            Print(e): true;
+            Sequence(seq): fold(seq, true, \acc, e -> acc && checkTree(e,d,true));
+            Iteration(b): checkTree(b,d,true);
+            Selection(sel): fold(sel, true, \acc, e -> acc && checkTree(e,d,true));
+        }
+    }
+}
+
+typeSafe_s2ast(s: string) -> Maybe<Prog> {
+    prog = s2ast(s);
+    if (checkTree(prog.b, prog.d, true)) {
+        Some(prog);
+    } else {
+        None();
+    }
+}
+

@@ -2,11 +2,13 @@ prog = ws decl*:d ws body:b ws { BuildProg(:d, :b) };
 
 decl = ws "VAR" ws var:v ws ":" ws type:t ws ";" ws { Decl(:v, :t) };
 type = arrayType | int;
-arrayType = ws "[" ws type:t ws "]" { ArrayType(:t) };
 int = ws "INT" { IntType() };
+arrayType = ws "[" ws type:t ws "]" { ArrayType(:t) };
 
 body = assignment | test | loop | choice | seq;
+
 assignment = ws var:v ws ":=" ws expression:e { Assignment(:v, :e) };
+
 test = ws "(" ws logicF:f ws ")" ws "?" { Test(:f) };
 loop = ws "{" ws seqBody*:bs ws "}" ws "*" { Loop(:bs) };
 choice = ws "{" ws body+:b ws choiceBody*:bs ws "}" { BuildChoice(:b, :bs) };

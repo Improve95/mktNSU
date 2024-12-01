@@ -1,0 +1,13 @@
+import runtime;
+import string;
+import lingo/pegcode/driver;
+import lingo/pegcode/parsic;
+import lingo/lab11/vm_grammar;
+
+export {
+    parseVmProgram(str: string) -> VmProgram; 
+}
+
+parseVmProgram(strVmProgram: string) -> VmProgram {
+    parsic(compilePegGrammar("#include lingo/lab11/vm.lingo"), strVmProgram, defaultPegActions);
+}

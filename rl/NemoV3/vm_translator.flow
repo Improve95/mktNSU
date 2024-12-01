@@ -1,0 +1,140 @@
+import nemo;
+import vmnemo;
+
+export {
+    nemo2nvm(nemo: Prog) -> vmProg;
+}
+
+nemo2nvm(nemo) {
+    vmProg(
+        decl2nvm(nemo.d),
+        body2nvm(nemo.b)
+    )
+
+}
+
+decl2nvm(d: [Decl]) -> [vmDecl] {
+    map(d, \e->vmDecl(
+        var2nvm(e.v),
+        type2nvm(e.t)
+    ))
+}
+
+var2nvm(v: Var) -> vmVar {
+    vmVar(v.val)
+}
+
+type2nvm(t: Type) -> vmType {
+    switch (t) {
+        IntType(): vmIntType();
+        ArrayType(v): vmArrayType(type2nvm(v));
+    }
+}
+
+body2nvm(body: Statement) -> [vmLine] {
+    switch (body) {
+        Assign(v,e): [vmLine(0, vmAssign(var2nvm(v), e2nvm(e)), [1])];
+        Test(b) : [vmLine(0, vmTest(bool2nvm(b)), [1])];
+        Sequence(b) : fold(b, [], \acc,e-> {
+            lines = body2nvm(e);
+            len = opMax(acc);
+            concat(acc, labelShift(lines, len))
+        });
+        Selection(b) : fold(b, [vmLine(0, vmTest(vmTrue()), [])], \acc, e -> {
+            lines = body2nvm(e);
+            len = opMax(acc);
+            nlen = len + opMax(lines);
+            concat(
+                mapi(
+                    acc,
+                    \ind, ee -> {
+                        if (ind == 0) {
+                            vmLine(ee.label, ee.instruction, arrayPush(ee.goto, len))
+                        } else {
+                            gotoLineReplace(ee, len, nlen)
+                        }
+                    }
+                ),
+                labelShift(lines, len)
+            )
+        });
+        Iteration(b) : {
+            lines = body2nvm(b);
+            len = opMax(lines);
+            concat(
+                [vmLine(0, vmTest(vmTrue()), [1, len + 1])],
+                map(labelShift(lines, 1), \ee-> gotoLineReplace(ee, len + 1, 0))
+            )
+        };
+        Print(e) : [vmLine(0, vmPrint(e2nvm(e)), [1])];
+    }
+}
+
+e2nvm(e: Expr) -> vmExpr {
+    switch (e) {
+        Array(expr) : vmArray(map(expr, val2nvm));
+        Update(expr, ind, val) : vmUpdate(var2nvm(expr), e2nvm(ind), e2nvm(val));
+        Add(v1,v2) : u2nvm(e);
+        Sub(v1,v2) : u2nvm(e);
+        Mult(v1,v2) : u2nvm(e);
+        Div(v1,v2) : u2nvm(e);
+        Negative(v) : u2nvm(e);
+        Var(v) : u2nvm(e);
+        Int(v) : u2nvm(e);
+        Apply(arr, expr) : u2nvm(e);
+    }
+}
+
+val2nvm(v: Val) ->vmVal {
+    switch(v) {
+        Array(e): {
+            vmArray(map(e, val2nvm));
+        }
+        Int(val): vmInt(val);
+    }
+}
+
+u2nvm(e: Unit) -> vmUnit {
+    switch (e) {
+        Add(v1,v2) : vmAdd(u2nvm(v1),u2nvm(v2));
+        Sub(v1,v2) : vmSub(u2nvm(v1),u2nvm(v2));
+        Mult(v1,v2) : vmMult(u2nvm(v1),u2nvm(v2));
+        Div(v1,v2) : vmDiv(u2nvm(v1),u2nvm(v2));
+        Negative(v) : vmNegative(u2nvm(v));
+        Var(v) : var2nvm(e);
+        Int(v) : vmInt(v);
+        Apply(arr, expr) : vmApply(var2nvm(arr), e2nvm(expr));
+    }
+}
+
+bool2nvm(b : Bool) -> vmBool {
+    switch (b) {
+        Not(v) : vmNot(bool2nvm(v));
+        And(b1,b2) : vmAnd(bool2nvm(b1),bool2nvm(b2));
+        Or(b1,b2) : vmOr(bool2nvm(b1),bool2nvm(b2));
+        Pred(e1,e2,c) : vmPred(e2nvm(e1),e2nvm(e2),cond2nvm(c));
+    }    
+}
+
+cond2nvm(c: Condition) {
+    switch (c) {
+        Eq() : vmEq();
+        NotEq() : vmNotEq();
+        Gr() : vmGr();
+        GrEq() : vmGrEq();
+        Ls() : vmLsEq();
+        LsEq() : vmLsEq();
+    }
+}
+
+labelShift(l: [vmLine], val: int) -> [vmLine] {
+    map(l, \e-> vmLine(e.label + val, e.instruction, map(e.goto, \ee->ee+val)))
+}
+
+opMax(l: [vmLine]) {
+    length(l)
+}
+
+gotoLineReplace(l: vmLine, old: int, new: int) -> vmLine {
+    vmLine(l.label, l.instruction, map(l.goto, \e->if(e==old)new else e))
+}

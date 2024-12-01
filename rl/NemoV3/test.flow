@@ -1,0 +1,25 @@
+import nemo;
+import vm_translator;
+import vmnemo;
+
+main() {
+    prog = "
+var x : int;
+var arr : [int];
+{   
+    x:=0;
+    arr:=[1, [1]];
+}
+";
+    nemo = typeSafe_s2ast(prog);
+    switch (nemo) {
+        Some(nm): {
+            vm = nemo2nvm(nm);
+            printvmProg(vm);
+            exec(vm);
+        };
+        None(): println("wrong syntax, assign error");
+    }
+
+    quit(0);
+}

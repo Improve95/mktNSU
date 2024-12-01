@@ -1,0 +1,31 @@
+export {
+    Program : (decl : [VarDecl], body : Body);
+
+    Type ::= Int, Array;
+    Int();
+    Array(t : Type);
+    VarDecl : (var : Var, type : Type);
+
+    Var : (name : string);
+    Number : (number : int);
+    ArrayOfValues : (first : Number, numbers : [Number]);
+    Operand ::= Number, Var, ArrayOfValues;
+    Relation ::= DirectRelation, InvertRelation;
+    DirectRelation : (op : string, e1 : Expr, e2 : Expr);
+    InvertRelation : (op : string, e1 : Expr, e2 : Expr);
+
+    Expr ::= Operand, ArExpr, FuncExpr, Neg;
+    ArExpr : (op : string, e1 : Expr, e2 : Expr);
+    FuncExpr ::= App, Upd;
+    App : (arr : Var, index : Number);
+    Upd : (arr : Expr, index : Expr, value : Expr);
+    Neg : (e : Expr);
+
+
+    Body ::= Assign, Test, Composition, Choice, Iteration;
+    Assign : (var : Var, value : Expr);
+    Test : (r : Relation);
+    Choice : (head : Body, tail : [Body]);
+    Composition : (head : Body, tail : [Body]);
+    Iteration : (body : Body);
+}

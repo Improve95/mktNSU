@@ -1,0 +1,22 @@
+import lingo/pegcode/driver;
+import lingo/lab11/nemo_grammar;
+import string;
+import runtime;
+
+export {
+    parseStringToProgram(strProgram : string) -> Program;
+}
+
+
+lingoGrammarOp : ref Maybe<[PegOp]> = ref None();
+
+lingoGrammar() {
+	onlyOnce(lingoGrammarOp, \ -> {
+		compilePegGrammar("#include lingo/lab11/nemo.lingo");
+	});
+}
+
+
+parseStringToProgram(strProgram : string) -> Program {
+    parsic(lingoGrammar(), strProgram, defaultPegActions);
+}

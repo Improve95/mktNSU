@@ -1,0 +1,88 @@
+import string;
+import string_utils;
+import lingo/pegcode/driver;
+import lingo/lab11/nemo_grammar;
+import lingo/lab11/vm_grammar;
+import lingo/lab11/string_converter;
+
+export {
+    translateProgramToVm(program: Program) -> string;
+}
+
+
+Translator(vmProgram: string, currentLabel: int);
+
+
+translateProgramToVm(program: Program) -> string {
+    state = Translator(varDeclaration2str(program.decl) + "\n", 0);
+    bodyToVmString(program.body, state).vmProgram;
+}
+
+
+bodyToVmString(body: Body, state: Translator) -> Translator {
+    newLabel = state.currentLabel + 1;
+    switch (body) {
+        Assign(var, value): {
+            Translator(state.vmProgram + 
+            statement2str(AssignStatement(state.currentLabel, var, value, [Label(newLabel)])) + "\n", newLabel);
+        }
+        Composition(h, t): {
+            fold(concat([h], t), state, \newState, bodyArg -> bodyToVmString(bodyArg, newState));
+        }
+        Test(r): {
+            Translator(state.vmProgram + 
+            statement2str(IfElseStatement(state.currentLabel, r, [Label(newLabel)], [])) + "\n", newLabel);
+        }
+        Choice(h, t): {
+            vmBodies = fold(t, [bodyToVmString(h, Translator("", state.currentLabel + 1))],
+            \tmp, nextBody -> concat(tmp, [bodyToVmString(nextBody, Translator("", tmp[length(tmp) - 1].currentLabel + 1))]));
+
+            nextLabels = map(vmBodies, \st -> st.currentLabel);
+            bodiesStartLabels = concat([state.currentLabel + 1], map(take(nextLabels, length(nextLabels) - 1), \label -> label + 1)); 
+            vmStartChoice = statement2str(trueIfStatement(state.currentLabel, bodiesStartLabels)) + "\n";
+
+            lastVmBody = vmBodies[length(vmBodies) - 1];
+            end = lastVmBody.currentLabel;
+            vmChoiceBodies = concatStrings(map(take(vmBodies, length(vmBodies) - 1), 
+                \st -> (st.vmProgram + statement2str(trueIfStatement(st.currentLabel, [end])) + "\n"))) + lastVmBody.vmProgram;
+            Translator(state.vmProgram + vmStartChoice + vmChoiceBodies, vmBodies[length(vmBodies) - 1].currentLabel);
+        }
+        Iteration(b): {
+            vmBody = bodyToVmString(b, Translator("", newLabel));
+            end = vmBody.currentLabel; 
+            //replacedVmProgram = replaceLabels(vmBody.vmProgram, end, state.currentLabel);
+            Translator(
+                state.vmProgram +
+                statement2str(trueIfStatement(state.currentLabel, [newLabel, end + 1])) + "\n" +
+                vmBody.vmProgram + 
+                statement2str(trueIfStatement(end, [state.currentLabel])) + "\n",
+                end + 1);
+            // Translator(
+            //     state.vmProgram +
+            //     statement2str(trueIfStatement(state.currentLabel, [newLabel, end + 1])) + "\n" +
+            //     replacedVmProgram,
+            //     end + 1);
+        }
+    }
+}
+
+// replaceLabels(vmProgram: string, old: int, new: int) -> string {
+//     //println(" ###" + i2s(old) + " " + i2s(new));
+//     commands = strSplit(vmProgram, "\n");
+//     fold(commands, "", \tmp, command -> {
+//         pos = strFindFirstOf(vmProgram, "goto");
+//         begin = substring(vmProgram, 0, pos-1);
+//         end = substring(vmProgram, pos, strlen(vmProgram)-pos+1);
+//         end1 = strReplace(end, i2s(old), i2s(new));
+//         tmp + begin + end1 + "\n";
+//     })
+// }
+
+
+trueIfStatement(label: int, goto: [int]) -> IfElseStatement {
+    IfElseStatement(label,
+        DirectRelation("==", Number(1), Number(1)),
+        map(goto, \id -> Label(id)),
+        []
+    );
+}
