@@ -17,37 +17,29 @@ export {
     executeProgram(code: vmCode) -> [State];
 }
 
-translateToVMCode(prog: Program) -> vmCode
-{
+translateToVMCode(prog: Program) -> vmCode {
     vars = prog.def_vars;
     opers = progBodyToOpers(prog.body);
     vmCode(vars, opers);
 }
 
-progBodyToOpers(body: Body) -> [vmOper]
-{
-    switch(body)
-    {
-        Assignment(var, expr):
-        {
+progBodyToOpers(body: Body) -> [vmOper] {
+    switch(body) {
+        Assignment(var, expr): {
             [AssignOper(0, var, expr, [1])];
         }
-        Test(cond):
-        {
+        Test(cond): {
             [CondOper(0, cond, [1], [])];
         }
-        Next(next):
-        {
+        Next(next): {
             fold(next, [], \ops, nt -> {
                 end = operMaxLabel(ops);
                 next_ops = increaseOperLabels(progBodyToOpers(nt), end);
                 concat(ops, next_ops);
             });
         }
-        Select(sel):
-        {
-            fold(sel, [], \ops, st -> 
-            {
+        Select(sel): {
+            fold(sel, [], \ops, st -> {
                 opers = increaseOperLabels(ops, 1);
                 end_prev = operMaxLabel(opers);
                 next_ops = increaseOperLabels(progBodyToOpers(st), end_prev);
@@ -61,10 +53,8 @@ progBodyToOpers(body: Body) -> [vmOper]
                 );
             });
         }
-        Iter(b):
-        {
-            fold(b, [], \ops, st -> 
-            {
+        Iter(b): {
+            fold(b, [], \ops, st ->  {
                 opers = increaseOperLabels(ops, 1);
                 end_prev = operMaxLabel(opers);
                 next_ops = increaseOperLabels(progBodyToOpers(st), end_prev);
@@ -84,14 +74,11 @@ progBodyToOpers(body: Body) -> [vmOper]
 operMaxLabel(ops: [vmOper]) -> int
 {
     fold(ops, 0, \max_l, op -> {
-        m = switch(op)
-        {
-            AssignOper(label, name, expr, goto):
-            {
+        m = switch(op) {
+            AssignOper(label, name, expr, goto): {
                 max(label, fold(goto, 0, max));
             }
-            CondOper(label, cond, then, or):
-            {
+            CondOper(label, cond, then, or): {
                 max(fold(then, 0, max), max(label, fold(or, 0, max)));
             }
         }
@@ -99,16 +86,13 @@ operMaxLabel(ops: [vmOper]) -> int
     });
 }
 
-increaseOperLabels(ops: [vmOper], value: int) -> [vmOper]
-{
+increaseOperLabels(ops: [vmOper], value: int) -> [vmOper] {
     map(ops, \op -> {
         switch (op) {
-            AssignOper(label, name, expr, goto):
-            {
+            AssignOper(label, name, expr, goto): {
                 AssignOper(label + value, name, expr, map(goto, \l -> l + value));
             }
-            CondOper(label, cond, then, or): 
-            {
+            CondOper(label, cond, then, or): {
                 CondOper(label + value, cond, map(then, \l -> l + value), map(or, \l -> l + value));
             }
         }
@@ -118,14 +102,11 @@ increaseOperLabels(ops: [vmOper], value: int) -> [vmOper]
 replaceLabel(ops: [vmOper], to: int, from: int) -> [vmOper]
 {
     map(ops, \op -> {
-        switch (op) 
-        {
-            AssignOper(label, name, expr, goto): 
-            {
+        switch (op) {
+            AssignOper(label, name, expr, goto): {
                 AssignOper((if (label == from) to else label), name, expr, map(goto, \l -> (if (l == from) to else l)));
             }
-            CondOper(label, cond, then, or):
-            {
+            CondOper(label, cond, then, or): {
                 CondOper((if (label == from) to else label), cond, map(then, \l ->  (if (l == from) to else l)), map(or, \l -> (if (l == from) to else l)));
             }
         }
