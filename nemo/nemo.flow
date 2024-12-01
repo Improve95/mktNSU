@@ -14,7 +14,7 @@ export {
     ArrayType : (type : Type);
     UnknownType();
 
-    Body ::= Assignment, Sequence, Test, Choice, Loop;
+    Body ::= Assignment, Test, Loop, Sequence, Choice;
     Assignment : (var : Var, expr : nemoTerm);
     Sequence   : (bodies : [Body]);
     Test	   : (form : Formula);

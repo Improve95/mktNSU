@@ -1,5 +1,6 @@
 import labs/nemo/validate;
 import labs/nemo/virtualMachine;
+import labs/nemo/vm2;
 
 main() {
 	nemoProgText = 
@@ -27,7 +28,7 @@ main() {
 	println(nemoProg);
 	println("");
 	
-	switch(CheckProg(nemoProg)) {
+	/* switch(CheckProg(nemoProg)) {
 		Error(info) : println("ERROR: " + info);
 		Success(info) : {
 			vmProg = translateNemo(nemoProg);
@@ -35,7 +36,9 @@ main() {
 			println("");
 			println(vm2s(vmProg));
 		}
-	}
+	} */
+
+	code = translateToVMCode(prog);
 
 	quit(0);
 }
