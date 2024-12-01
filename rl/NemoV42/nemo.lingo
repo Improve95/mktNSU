@@ -1,20 +1,25 @@
-program = varDef+:vars ws body:progbody { Program(:vars, :progbody) };
+program = varDef+:vars ws body:progbody {Program(:vars, :progbody)};
 
-varDef = ws "VAR" ws string:e1 ws ":" ws type:e2 ws ";" ws { DefVar(:e1, :e2) };
-type = array | int;
-int = "INT" { INT() };
-array = "[" ws type:e1 ws "]" { Array(:e1) };
+varDef = ws "VAR" ws string:e1 ws ":" ws type:e2 ws ";" ws {DefVar(:e1, :e2)};
+type = int | array;
+int = "INT" {INT()};
+array = "[" ws type:e1 ws "]" {Array(:e1)};
 
-body = assignment | test | iteration | select | next;
+body = ws "{" ws (next | select | statement):b ws "}" ws {:b};
 
-assignment = ws string:e1 ws ":=" ws expression:e2 { Assignment(:e1, :e2) };
+assignment = ws string:e1 ws ":=" ws expression:e2 {Assignment(:e1, :e2)};
 
-test = ws "(" ws condition:e1 ws ")" ws "?" ws { Test(:e1) };
-iteration = ws "{" ws seqBody*:b ws "}" ws "*" ws { Iter(:b) };
-select = ws "{" ws body+:e1 ws choiceBody*:e2 ws "}" ws { buildSelect(:e1, :e2) };
-choiceBody = ws "U" ws body:e ws { :e }; 
-next = ws "{" ws seqBody*:b ws "}" ws { Next(:b) };
-seqBody = ws body:b ws ";" ws { :b };
+next = ws nt+:b ws {Next(:b)};
+nt = ws (select | statement):n ws ";" ws {:n};
+
+select = ws statement:e1 ws st+:e2 {buildSelect(:e1, :e2)}   ;
+st = ws "U" ws statement:n ws {:n};
+
+statement = iteration | body | assignment | test;
+
+iteration = ws "(" ws body:b ws ")" ws "*" ws {Iter(:b)};
+
+test = ws "(" ws condition:e1 ws ")" ws "?" ws{Test(:e1)};
 
 condition = logic_or;
 logic_or = ws logic_and:c1 ws "||" ws logic_or:c2 ws {LogicOr(:c1, :c2)} | logic_and;
