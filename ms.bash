@@ -1,2 +1,4 @@
+rm nemo.jar
 clear
-flowcpp block2/lab7.flow
+flowc1 rl/NemoV4/main.flow jar=nemo I=rl/NemoV4
+java -jar nemo.jar

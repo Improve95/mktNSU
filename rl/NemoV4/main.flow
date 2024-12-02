@@ -1,5 +1,5 @@
-import labs/rl/NemoV4/validate;
-import labs/rl/NemoV4/vm;
+import validate;
+import vm;
 
 main() {
     programm = 
@@ -30,6 +30,7 @@ main() {
 
     correct = checkProgram(prog);
     if (correct) {
+        println("correct");
         code = translateToVMCode(prog);
         println(code);
         println("");

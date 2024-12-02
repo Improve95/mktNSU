@@ -1,4 +1,4 @@
-import labs/rl/NemoV4/nemo;
+import nemo;
 
 export {
     vmVar(name: string, type: Type, val : Value);
@@ -54,19 +54,9 @@ progBodyToOpers(body: Body) -> [vmOper] {
             });
         }
         Iter(b): {
-            fold(b, [], \ops, st ->  {
-                opers = increaseOperLabels(ops, 1);
-                end_prev = operMaxLabel(opers);
-                next_ops = increaseOperLabels(progBodyToOpers(st), end_prev);
-                end_next = operMaxLabel(next_ops);
-                concat(
-                    concat(
-                        [CondOper(0, Comparison(Int(1), Int(1), Equal()), [1, end_prev], [])], 
-                        replaceLabel(opers, end_next, end_prev)
-                    ), 
-                    next_ops
-                );
-            });
+            ops = increaseOperLabels(progBodyToOpers(b), 1);
+            end = operMaxLabel(ops);
+            concat([CondOper(0, Comparison(Int(1), Int(1), Equal()), [1, end], [])], replaceLabel(ops, 0, end));
         }
     }
 }

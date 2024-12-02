@@ -10,7 +10,7 @@ body = assignment | test | iteration | select | next;
 assignment = ws string:e1 ws ":=" ws expression:e2 { Assignment(:e1, :e2) };
 
 test = ws "(" ws condition:e1 ws ")" ws "?" ws { Test(:e1) };
-iteration = ws "{" ws seqBody:b ws "}" ws "*" ws { Iter(:b) };
+iteration = next:b "*" ws { Iter(:b) };
 select = ws "{" ws body+:e1 ws choiceBody*:e2 ws "}" ws { buildSelect(:e1, :e2) };
 choiceBody = ws "U" ws body:e ws { :e }; 
 next = ws "{" ws seqBody*:b ws "}" ws { Next(:b) };

@@ -1,0 +1,284 @@
+import lingo/pegcode/driver;
+import string;
+import runtime;
+import sys/system;
+import ds/tree;
+import mylabs/nemo;
+
+vmProg : (decl: [Decl], body: [vmLine]);
+vmLine : (label: int, instruction: vmInstruction, goto: [int]);
+vmInstruction ::= Print, Assign, Test;
+vmState : (s : [Pair<int,Tree<string, Val>>]);
+
+initVmState(prog: vmProg) {
+    vmState(
+        [Pair(
+            0,
+            d2t(prog.decl)
+        )]
+    )
+}
+
+mapState(goto: [int], t: Tree<string, Val>) {
+    vmState(map(goto, \e -> Pair(e, t)))
+}
+
+exec(prog: vmProg) -> void {
+    init = 0;
+    limit = 100;
+    _exec(
+        prog.body,
+        initVmState(prog),
+        init,
+        limit
+    )
+}
+ 
+_exec(body: [vmLine], state: vmState, cur: int, limit: int) -> void {
+    end = length(body);
+    newState = fold(state.s, vmState([]), \acc, e-> {
+        //println(e);
+        s = execLine(body[e.first], e.second);
+        vmState(filter(concat(acc.s, s.s), \ee->ee.first != end))
+    });
+    //println(newState);
+    if (length(newState.s) > 0 && cur < limit) {
+        _exec(body, newState, cur + 1, limit);
+    } else {
+        if (length(newState.s) > 0 && cur >= limit)
+            println("Nemo virtual machine stopped execution. Iterations limit exceeded.")
+        else 
+            println("Nemo virtual machine finished execution.")
+    }
+}
+
+execLine(line: vmLine, vars: Tree<string, Val>) -> vmState {
+    switch (line.instruction) {
+        Assign(v,e): {
+            t = setTree(vars, v.val, eval(e, vars));
+            mapState(line.goto, t);
+        }
+        Test(b): if (cmp(b, vars)) mapState(line.goto, vars) else vmState([]);
+        Print(e): {
+            println(val2s(eval(e, vars)));
+            mapState(line.goto, vars);
+        }
+    }
+}
+
+eval(e: Expr, vars: Tree<string, Val>) -> Val {
+    switch(e) {
+        Int(v): e;
+        Array(v): e;
+        Add(v1,v2): biEval(v1,v2, vars, \a,b -> a + b);
+        Sub(v1,v2): biEval(v1,v2, vars, \a,b -> a - b);
+        Mult(v1,v2): biEval(v1,v2, vars, \a,b -> a * b);
+        Div(v1,v2): biEval(v1,v2, vars, \a,b -> a / b);
+        Negative(v): Int(evali(v, vars));
+        Var(x): findVar(e, vars);
+        Apply(v1,v2): {
+            arr = findVar(v1,vars);
+            ind = evali(v2, vars);
+            getByIndex(arr, ind);
+        }
+        Update(v1,v2,v3): {
+            val = eval(v3, vars);
+            ind = evali(v2, vars);
+            setByIndex(v1,ind,val,vars);
+        }
+    }
+}
+
+biEval(v1: Expr, v2: Expr, vars: Tree<string, Val>, fn: (int,int)->int) -> Int {
+    Int(fn(
+        evali(v1, vars),
+        evali(v2, vars)
+    ))
+}
+
+evali(e: Expr, vars: Tree<string, Val>) -> int {
+    val2i(eval(e, vars));
+}
+
+setByIndex(arv: Var, ind: int, val: Val, vars: Tree<string, Val> ) {
+    arr = switch(findVar(arv,vars)) {
+        Array(e): e;
+        Int(v): {
+            terminateWithError("Illegal argument. Cannot use update on non-array var.");
+            [];
+        }
+    };
+    len = length(arr);
+    if (ind < len) {
+        Array(replace(arr, ind, val));
+    } else {
+        Array(concat3(arr, arrayRepeat(Int(0), ind - len), [val]))
+    }
+}
+
+getByIndex(arr: Val, ind: int) -> Val {
+    switch (arr) {
+        Array(e): {
+            if (ind < length(e)) {
+                e[ind]
+            } else {
+                terminateWithError("Index "+ i2s(ind) +" out of bound " + i2s(length(e)));
+                Int(-1);
+            }
+        }
+        Int(v): {
+            terminateWithError("getByIndex(arr): expected Array, got Int");
+            Int(-1);
+        }
+    }
+}
+
+cmp(b: Bool, vars: Tree<string, Val>) -> bool {
+    switch (b) {
+        Bool(): true;
+        And(b1,b2): cmp(b1,vars) && cmp(b2,vars);
+        Or(b1,b2): cmp(b1,vars) && cmp(b2, vars);
+        Not(bb): !cmp(bb, vars);
+        Pred(v1,v2,c): {
+            vv1 = val2i(eval(v1, vars));
+            vv2 = val2i(eval(v2, vars));
+            switch(c) {
+                Eq(): vv1 == vv2;
+                NotEq(): vv1 != vv2;
+                Ls(): vv1 < vv2;
+                LsEq(): vv1 <= vv2;
+                Gr(): vv1 > vv2;
+                GrEq(): vv1 >= vv2;
+            }
+        }
+    }
+}
+
+findVar(var: Var, vars: Tree<string, Val>) -> Val {
+    v = lookupTree(vars, var.val);
+    switch (v) {
+        Some(vv) : vv;
+        None() : {
+            terminateWithError("Cannot find var: " + var.val);
+            Int(-1);
+        }
+    }
+}
+
+val2s(v: Val) -> string {
+    switch(v) {
+        Int(vv): i2s(vv);
+        Array(e): "[" + strGlue(map(e,val2s),", ") + "]";
+    }
+}
+
+val2i(v: Val) -> int {
+    switch (v) {
+        Int(vv): vv;
+        Array(vv): {
+            terminateWithError("Illegal argument. Expected Int, found Array.");
+            -1;
+        };
+    }
+}
+
+d2t(d: [Decl]) -> Tree<string, Val> {
+    fold(d, makeTree(), \acc, e -> setTree(acc, e.v.val, initType(e.t)))
+}
+
+initType(t: Type) -> Val {
+    switch(t) {
+        IntType(): Int(0);
+        ArrayType(e): Array([initType(e)]);
+    }
+}
+
+printvmProg(prog: vmProg) -> void {
+    println("Var declaration");
+    iter(prog.decl, println);
+    println("Program body");
+    iter(prog.body, println);
+}
+
+terminateWithError(msg: string) {
+    println("Runtime error: " + msg);
+    quit(-1);
+}
+
+nemo2nvm(nemo) {
+    vmProg(
+        nemo.d,
+        body2nvm(nemo.b)
+    )
+
+}
+
+body2nvm(body: Statement) -> [vmLine] {
+    switch (body) {
+        Assign(v,e): [vmLine(0, Assign(v, e), [1])];
+        Test(b) : [vmLine(0, Test(b), [1])];
+        Sequence(b) : fold(b, [], \acc,e-> {
+            lines = body2nvm(e);
+            len = opMax(acc);
+            concat(acc, labelShift(lines, len))
+        });
+        Selection(b) : fold(b, [vmLine(0, Test(vmTrue()), [])], \acc, e -> {
+            lines = body2nvm(e);
+            len = opMax(acc);
+            nlen = len + opMax(lines);
+            concat(
+                mapi(
+                    acc,
+                    \ind, ee -> {
+                        if (ind == 0) {
+                            vmLine(ee.label, ee.instruction, arrayPush(ee.goto, len))
+                        } else {
+                            gotoLineReplace(ee, len, nlen)
+                        }
+                    }
+                ),
+                labelShift(lines, len)
+            )
+        });
+        Iteration(b) : {
+            lines = body2nvm(b);
+            len = opMax(lines);
+            concat(
+                [vmLine(0, Test(vmTrue()), [1, len + 1])],
+                map(labelShift(lines, 1), \ee-> gotoLineReplace(ee, len + 1, 0))
+            )
+        };
+        Print(e) : [vmLine(0, Print(e), [1])];
+    }
+}
+
+
+labelShift(l: [vmLine], val: int) -> [vmLine] {
+    map(l, \e-> vmLine(e.label + val, e.instruction, map(e.goto, \ee->ee+val)))
+}
+
+opMax(l: [vmLine]) {
+    length(l)
+}
+
+gotoLineReplace(l: vmLine, old: int, new: int) -> vmLine {
+    vmLine(l.label, l.instruction, map(l.goto, \e->if(e==old)new else e))
+}
+
+
+main() {
+    file = "mylabs/1_prog.nemo";
+    prog = getFileContent(file);
+    nemo = typesafe_s2expr(prog);
+    switch (nemo) {
+        Some(nm): {
+            println(nm);
+            println("Good!");
+            vm = nemo2nvm(nm);
+            printvmProg(vm);
+            exec(vm);
+            }
+        None(): println("Wrong syntax!");
+    }
+    quit(0);
+}

@@ -21,7 +21,7 @@ export {
     Assignment(var: string, exp: Exp);
     DefVar(name: string, type: Type);
     Test(be: Condition);
-    Iter(b: [Body]);
+    Iter(b: Body);
     APP(var: Var, index: Int);
     UPD(var: Var, index: Int, val: Exp);
 
@@ -46,7 +46,7 @@ export {
     parse(text : string) -> Program;
 }
 
-grammar = compilePegGrammar("#include labs/rl/NemoV4/nemo.lingo");
+grammar = compilePegGrammar("#include rl/NemoV4/nemo.lingo");
 
 buildSub(xs : [flow])
 {
