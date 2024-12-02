@@ -45,8 +45,6 @@ checkDecl(defs: [DefVar]) -> Maybe<Tree>
 
 checkBody(body: Body, declared_vars: Tree<string, Type>) -> bool
 {
-    println(body);
-    println("");
     switch(body)
     {
         Assignment(var, ex):
