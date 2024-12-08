@@ -1,8 +1,6 @@
-import labs/nemo/nemo;
+import nemo;
 
 export {
-    translateToVMCode(prog: NemoAst) -> vmCode;
-
     vmVar(name: string, type: Type, val : Value);
     Value::= ArrVal, IntVal;
     ArrVal(val: [Value]);
@@ -10,43 +8,38 @@ export {
 
     vmCode(vars: [DefVar], opers: [vmOper]);
     vmOper::= AssignOper, CondOper;
-    AssignOper(label: int, name: string, exp: ArithExpr, goto: [int]);
+    AssignOper(label: int, name: string, exp: Exp, goto: [int]);
     CondOper(label: int, cond: Condition, then: [int], or: [int]);
 
     State(label: int, vars: Tree<string, vmVar>);
+
+    translateToVMCode(prog: Program) -> vmCode;
+    executeProgram(code: vmCode) -> [State];
 }
 
-translateToVMCode(prog: NemoAst) -> vmCode
-{
+translateToVMCode(prog: Program) -> vmCode {
     vars = prog.def_vars;
     opers = progBodyToOpers(prog.body);
     vmCode(vars, opers);
 }
 
-progBodyToOpers(body: Body) -> [vmOper] 
-{
-    switch(body)
-    {
-        Assignment(var, expr):
-        {
+progBodyToOpers(body: Body) -> [vmOper] {
+    switch(body) {
+        Assignment(var, expr): {
             [AssignOper(0, var, expr, [1])];
         }
-        Test(cond):
-        {
+        Test(cond): {
             [CondOper(0, cond, [1], [])];
         }
-        Sequence(next):
-        {
+        Next(next): {
             fold(next, [], \ops, nt -> {
                 end = operMaxLabel(ops);
                 next_ops = increaseOperLabels(progBodyToOpers(nt), end);
                 concat(ops, next_ops);
             });
         }
-        Choice(sel):
-        {
-            fold(sel, [], \ops, st -> 
-            {
+        Select(sel): {
+            fold(sel, [], \ops, st -> {
                 opers = increaseOperLabels(ops, 1);
                 end_prev = operMaxLabel(opers);
                 next_ops = increaseOperLabels(progBodyToOpers(st), end_prev);
@@ -60,8 +53,7 @@ progBodyToOpers(body: Body) -> [vmOper]
                 );
             });
         }
-        Loop(b):
-        {
+        Iter(b): {
             ops = increaseOperLabels(progBodyToOpers(b), 1);
             end = operMaxLabel(ops);
             concat([CondOper(0, Comparison(Int(1), Int(1), Equal()), [1, end], [])], replaceLabel(ops, 0, end));
@@ -72,14 +64,11 @@ progBodyToOpers(body: Body) -> [vmOper]
 operMaxLabel(ops: [vmOper]) -> int
 {
     fold(ops, 0, \max_l, op -> {
-        m = switch(op)
-        {
-            AssignOper(label, name, expr, goto):
-            {
+        m = switch(op) {
+            AssignOper(label, name, expr, goto): {
                 max(label, fold(goto, 0, max));
             }
-            CondOper(label, cond, then, or):
-            {
+            CondOper(label, cond, then, or): {
                 max(fold(then, 0, max), max(label, fold(or, 0, max)));
             }
         }
@@ -87,16 +76,13 @@ operMaxLabel(ops: [vmOper]) -> int
     });
 }
 
-increaseOperLabels(ops: [vmOper], value: int) -> [vmOper]
-{
+increaseOperLabels(ops: [vmOper], value: int) -> [vmOper] {
     map(ops, \op -> {
         switch (op) {
-            AssignOper(label, name, expr, goto):
-            {
+            AssignOper(label, name, expr, goto): {
                 AssignOper(label + value, name, expr, map(goto, \l -> l + value));
             }
-            CondOper(label, cond, then, or): 
-            {
+            CondOper(label, cond, then, or): {
                 CondOper(label + value, cond, map(then, \l -> l + value), map(or, \l -> l + value));
             }
         }
@@ -106,14 +92,11 @@ increaseOperLabels(ops: [vmOper], value: int) -> [vmOper]
 replaceLabel(ops: [vmOper], to: int, from: int) -> [vmOper]
 {
     map(ops, \op -> {
-        switch (op) 
-        {
-            AssignOper(label, name, expr, goto): 
-            {
+        switch (op) {
+            AssignOper(label, name, expr, goto): {
                 AssignOper((if (label == from) to else label), name, expr, map(goto, \l -> (if (l == from) to else l)));
             }
-            CondOper(label, cond, then, or):
-            {
+            CondOper(label, cond, then, or): {
                 CondOper((if (label == from) to else label), cond, map(then, \l ->  (if (l == from) to else l)), map(or, \l -> (if (l == from) to else l)));
             }
         }
@@ -124,7 +107,7 @@ executeProgram(code: vmCode) -> [State]
 {
     vars = fold(code.vars, makeTree(), \tree, dec -> {
         setTree(tree, dec.name, vmVar(dec.name, dec.type, switch(dec.type) {
-            IntType(): IntVal(0);
+            INT(): IntVal(0);
             Array(typ): ArrVal([]);
         }))
     });
@@ -218,12 +201,12 @@ findLabel(opers: [vmOper], label: int) -> [vmOper]
     });
 }
 
-execAssign(name: string, exp: ArithExpr, vars: Tree<string, vmVar>) -> Tree
+execAssign(name: string, exp: Exp, vars: Tree<string, vmVar>) -> Tree
 {
     setTree(vars, name, vmVar(name, getTypeVM(exp, vars), calculate(exp, vars)));
 }
 
-getTypeVM(exp: ArithExpr, declared_vars: Tree<string, vmVar>) -> Type
+getTypeVM(exp: Exp, declared_vars: Tree<string, vmVar>) -> Type
 {
     switch (exp) 
     {
@@ -236,19 +219,19 @@ getTypeVM(exp: ArithExpr, declared_vars: Tree<string, vmVar>) -> Type
                 None(): 
                 {
                     println("Not declared variable: " + name);
-                    IntType();
+                    INT();
                 }
             }
         }
-        Apply(arr, index): // returns type of array elements
+        APP(arr, index): // returns type of array elements
         {
             type = getTypeVM(arr, declared_vars);
             switch(type)
             {
-                IntType():
+                INT():
                 {
-                    println("Trying to Apply to a non-array variable");
-                    IntType();
+                    println("Trying to APP to a non-array variable");
+                    INT();
                 }
                 Array(typ):
                 {
@@ -256,15 +239,15 @@ getTypeVM(exp: ArithExpr, declared_vars: Tree<string, vmVar>) -> Type
                 }
             }
         }
-        Upd(arr, index, val): // returns type of the array
+        UPD(arr, index, val): // returns type of the array
         {
             type = getTypeVM(arr, declared_vars);
             switch(type)
             {
-                IntType():
+                INT():
                 {
-                    println("Trying to Upd a non-array variable");
-                    IntType();
+                    println("Trying to UPD a non-array variable");
+                    INT();
                 }
                 Array(typ):
                 {
@@ -272,7 +255,7 @@ getTypeVM(exp: ArithExpr, declared_vars: Tree<string, vmVar>) -> Type
                 }
             }
         }
-        default: IntType();
+        default: INT();
     }
 }
 
@@ -332,8 +315,8 @@ execCond(condition: Condition, vars: Tree<string, vmVar>) -> bool
     }
 }
 
-// ArithExpr ::= Add, Sub, Mul, Div, Var, Int, Apply, Upd;
-calculate(exp: ArithExpr, vars: Tree<string, vmVar>) -> Value
+// Exp ::= Add, Sub, Mul, Div, Var, Int, APP, UPD;
+calculate(exp: Exp, vars: Tree<string, vmVar>) -> Value
 {
     switch(exp) 
     {
@@ -354,7 +337,7 @@ calculate(exp: ArithExpr, vars: Tree<string, vmVar>) -> Value
                 Some(v): v.val; // v means Vendetta  :)
             }
         }
-        Apply(a, i): 
+        APP(a, i): 
         {
             array = calculate(a, vars);
             index = calculate(i, vars);
@@ -383,7 +366,7 @@ calculate(exp: ArithExpr, vars: Tree<string, vmVar>) -> Value
                 }
             }
         }
-        Upd(a, i, v): 
+        UPD(a, i, v): 
         {
             array = calculate(a, vars);
             index = calculate(i, vars);
@@ -509,7 +492,8 @@ calculate(exp: ArithExpr, vars: Tree<string, vmVar>) -> Value
                 }
             }
         }
-        Sub(l, r): {
+        Sub(l, r):
+        {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
@@ -537,5 +521,6 @@ calculate(exp: ArithExpr, vars: Tree<string, vmVar>) -> Value
                 }
             }
         }
+        
     }
 }
