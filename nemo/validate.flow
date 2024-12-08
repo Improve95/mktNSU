@@ -67,7 +67,6 @@ checkBody(body: Body, declared_vars: Tree<string, Type>) -> bool {
     }
 }
 
-//Exp ::= Add, Sub, Mul, Div, Var, Int, APP, UPD;
 checkExpression(exp: Exp, declared_vars: Tree<string, Type>) -> bool {
     switch(exp) {
         APP(arr, index): {

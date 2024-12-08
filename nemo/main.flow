@@ -7,8 +7,6 @@ main() {
         VAR n: INT; 
         VAR x: INT; 
         VAR y: INT; 
-        VAR tmp : INT; 
-        VAR array : [INT];
         {
             n := 12; x := 0; y := 0;
             {

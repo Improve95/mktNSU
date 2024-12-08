@@ -194,7 +194,7 @@ getTypeVM(exp: Exp, declared_vars: Tree<string, vmVar>) -> Type {
                 }
             }
         }
-        APP(arr, index): { // returns type of array elements
+        APP(arr, index): {
             type = getTypeVM(arr, declared_vars);
             switch (type) {
                 INT(): {
@@ -206,7 +206,7 @@ getTypeVM(exp: Exp, declared_vars: Tree<string, vmVar>) -> Type {
                 }
             }
         }
-        UPD(arr, index, val): { // returns type of the array
+        UPD(arr, index, val): {
             type = getTypeVM(arr, declared_vars);
             switch (type) {
                 INT(): {
