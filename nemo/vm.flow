@@ -61,8 +61,7 @@ progBodyToOpers(body: Body) -> [vmOper] {
     }
 }
 
-operMaxLabel(ops: [vmOper]) -> int
-{
+operMaxLabel(ops: [vmOper]) -> int {
     fold(ops, 0, \max_l, op -> {
         m = switch(op) {
             AssignOper(label, name, expr, goto): {
@@ -71,7 +70,7 @@ operMaxLabel(ops: [vmOper]) -> int
             CondOper(label, cond, then, or): {
                 max(fold(then, 0, max), max(label, fold(or, 0, max)));
             }
-        }
+        };
         max(max_l, m);
     });
 }
@@ -86,37 +85,34 @@ increaseOperLabels(ops: [vmOper], value: int) -> [vmOper] {
                 CondOper(label + value, cond, map(then, \l -> l + value), map(or, \l -> l + value));
             }
         }
-    });   
+    });
 }
 
-replaceLabel(ops: [vmOper], to: int, from: int) -> [vmOper]
-{
+replaceLabel(ops: [vmOper], to: int, from: int) -> [vmOper] {
     map(ops, \op -> {
         switch (op) {
             AssignOper(label, name, expr, goto): {
                 AssignOper((if (label == from) to else label), name, expr, map(goto, \l -> (if (l == from) to else l)));
             }
             CondOper(label, cond, then, or): {
-                CondOper((if (label == from) to else label), cond, map(then, \l ->  (if (l == from) to else l)), map(or, \l -> (if (l == from) to else l)));
+                CondOper((if (label == from) to else label), cond, map(then, \l -> (if (l == from) to else l)), map(or, \l -> (if (l == from) to else l)));
             }
         }
     });
 }
 
-executeProgram(code: vmCode) -> [State]
-{
+executeProgram(code: vmCode) -> [State] {
     vars = fold(code.vars, makeTree(), \tree, dec -> {
         setTree(tree, dec.name, vmVar(dec.name, dec.type, switch(dec.type) {
             INT(): IntVal(0);
             Array(typ): ArrVal([]);
-        }))
+        }));
     });
 
     executeCode(code.opers, [State(0, vars)]);
 }
 
-executeCode(opers: [vmOper], states: [State]) -> [State]
-{
+executeCode(opers: [vmOper], states: [State]) -> [State] {
     exit_label = operMaxLabel(opers);
 
     new_states = fold(states, [], \sts, st -> {
@@ -124,26 +120,20 @@ executeCode(opers: [vmOper], states: [State]) -> [State]
 
         ops = findLabel(opers, label);
         new_sts = fold(ops, [], \n_o, op -> { 
-            switch(op) 
-            {
-                AssignOper(lbl, name, expr, goto): 
-                {
+            switch(op) {
+                AssignOper(lbl, name, expr, goto): {
                     vars = execAssign(name, expr, st.vars);
                     fold(goto, [], \n_s, l -> {
                         arrayPush(n_s, State(l, vars));
                     });
                 }
-                CondOper(lbl, cond, then, or): 
-                {
+                CondOper(lbl, cond, then, or): {
                     p = execCond(cond, st.vars);
-                    if(p) 
-                    {
+                    if (p) {
                         fold(then, [], \n_s, l -> {
                             arrayPush(n_s, State(l, st.vars));
                         });
-                    }
-                    else 
-                    {
+                    } else {
                         fold(or, [], \n_s, l -> {
                             arrayPush(n_s, State(l, st.vars));
                         });
@@ -155,372 +145,278 @@ executeCode(opers: [vmOper], states: [State]) -> [State]
         concat(sts, new_sts);
     });
 
-     exit_states = fold(new_states, [], \es, st -> {
-        if (st.label == exit_label) 
-        {
+    exit_states = fold(new_states, [], \es, st -> {
+        if (st.label == exit_label) {
             arrayPush(es, st);
-        } 
-        else 
-        {
+        } else {
             es;
         }
     });
 
     exec_states = fold(new_states, [], \sts, st -> {
-        if (contains(exit_states, st)) 
-        {
+        if (contains(exit_states, st)) {
             sts;
-        } 
-        else 
-        {
+        } else {
             arrayPush(sts, st);
         }
     });
 
-    if (length(exec_states) == 0) 
-    {
+    if (length(exec_states) == 0) {
         exit_states;
-    } 
-    else 
-    {
+    } else {
         concat(exit_states, executeCode(opers, exec_states));
     }
 }
 
-findLabel(opers: [vmOper], label: int) -> [vmOper]
-{
+findLabel(opers: [vmOper], label: int) -> [vmOper] {
     fold(opers, [], \ops, op -> {
-        if (op.label == label) 
-        {
+        if (op.label == label) {
             arrayPush(ops, op);
-        } 
-        else 
-        {
+        } else {
             ops;
         }
     });
 }
 
-execAssign(name: string, exp: Exp, vars: Tree<string, vmVar>) -> Tree
-{
+execAssign(name: string, exp: Exp, vars: Tree<string, vmVar>) -> Tree {
     setTree(vars, name, vmVar(name, getTypeVM(exp, vars), calculate(exp, vars)));
 }
 
-getTypeVM(exp: Exp, declared_vars: Tree<string, vmVar>) -> Type
-{
-    switch (exp) 
-    {
-        Var(name):
-        {
+getTypeVM(exp: Exp, declared_vars: Tree<string, vmVar>) -> Type {
+    switch (exp) {
+        Var(name): {
             var_name = lookupTree(declared_vars, name);
-            switch(var_name)
-            {
-                Some(n): {n.type}
-                None(): 
-                {
+            switch (var_name) {
+                Some(n): { n.type; }
+                None(): {
                     println("Not declared variable: " + name);
                     INT();
                 }
             }
         }
-        APP(arr, index): // returns type of array elements
-        {
+        APP(arr, index): { // returns type of array elements
             type = getTypeVM(arr, declared_vars);
-            switch(type)
-            {
-                INT():
-                {
+            switch (type) {
+                INT(): {
                     println("Trying to APP to a non-array variable");
                     INT();
                 }
-                Array(typ):
-                {
+                Array(typ): {
                     typ; 
                 }
             }
         }
-        UPD(arr, index, val): // returns type of the array
-        {
+        UPD(arr, index, val): { // returns type of the array
             type = getTypeVM(arr, declared_vars);
-            switch(type)
-            {
-                INT():
-                {
+            switch (type) {
+                INT(): {
                     println("Trying to UPD a non-array variable");
                     INT();
                 }
-                Array(typ):
-                {
+                Array(typ): {
                     type;
                 }
             }
         }
-        default: INT();
+        default: { INT(); }
     }
 }
 
-execCond(condition: Condition, vars: Tree<string, vmVar>) -> bool
-{
-    switch(condition) 
-    {
-        LogicOr(left, right): 
-        {
+execCond(condition: Condition, vars: Tree<string, vmVar>) -> bool {
+    switch (condition) {
+        LogicOr(left, right): {
             execCond(left, vars) || execCond(right, vars);
         }
-        LogicAnd(left, right): 
-        {
+        LogicAnd(left, right): {
             execCond(left, vars) && execCond(right, vars);
         }
-        LogicNot(cond): 
-        {
+        LogicNot(cond): {
             !execCond(cond, vars);
         }
-        Comparison(l, r, relation): 
-        {
+        Comparison(l, r, relation): {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
-            switch(left) 
-            {
-                ArrVal(l_val): 
-                {
+            switch (left) {
+                ArrVal(l_val): {
                     println("There is an error in comparison. Can't compare");
                     false;
                 }
-                IntVal(l_val): 
-                {
-                    switch(right) 
-                    {
-                        ArrVal(r_val): 
-                        {
+                IntVal(l_val): {
+                    switch (right) {
+                        ArrVal(r_val): {
                             println("There is an error in comparison. Can't compare");
                             false;
                         }
                         IntVal(r_val): {
-                            switch(relation) 
-                            {
-                                Equal(): l_val == r_val;
-                                NotEqual(): l_val != r_val;
-                                Greater(): l_val > r_val;
-                                GreaterEqual(): l_val >= r_val;
-                                Less(): l_val < r_val;
-                                LessEqual(): l_val <= r_val;
+                            switch (relation) {
+                                Equal(): { l_val == r_val; }
+                                NotEqual(): { l_val != r_val; }
+                                Greater(): { l_val > r_val; }
+                                GreaterEqual(): { l_val >= r_val; }
+                                Less(): { l_val < r_val; }
+                                LessEqual(): { l_val <= r_val; }
                             }
                         }
                     }
                 }
             }
-
         }
     }
 }
 
-// Exp ::= Add, Sub, Mul, Div, Var, Int, APP, UPD;
-calculate(exp: Exp, vars: Tree<string, vmVar>) -> Value
-{
-    switch(exp) 
-    {
-        Int(value): 
-        {
+calculate(exp: Exp, vars: Tree<string, vmVar>) -> Value {
+    switch (exp) {
+        Int(value): {
             IntVal(value);
         }
-        Var(name): 
-        {
+        Var(name): {
             mVar = lookupTree(vars, name);
-            switch(mVar) 
-            {
-                None(): 
-                {
+            switch (mVar) {
+                None(): {
                     println(name + " variable is not defined.");
                     IntVal(0);
                 }
-                Some(v): v.val; // v means Vendetta  :)
+                Some(v): { v.val; }
             }
         }
-        APP(a, i): 
-        {
+        APP(a, i): {
             array = calculate(a, vars);
             index = calculate(i, vars);
 
-            switch (array) 
-            {
-                IntVal(v): 
-                {
-                    println("Using invalid array. Can't acces value");
+            switch (array) {
+                IntVal(v): {
+                    println("Using invalid array. Can't access value");
                     IntVal(0);
                 }
-                ArrVal(v): 
-                {
-                    switch(index) 
-                    {
-                        ArrVal(val): 
-                        {
-                            println("Using invalid array. Can't acces value");
+                ArrVal(v): {
+                    switch (index) {
+                        ArrVal(val): {
+                            println("Using invalid array. Can't access value");
                             IntVal(0);
                         }
-                        IntVal(val): 
-                        {
+                        IntVal(val): {
                             array.val[index.val];
                         }
                     }
                 }
             }
         }
-        UPD(a, i, v): 
-        {
+        UPD(a, i, v): {
             array = calculate(a, vars);
             index = calculate(i, vars);
             value = calculate(v, vars);
 
-            switch (array) 
-            {
-                IntVal(val): 
-                {
+            switch (array) {
+                IntVal(val): {
                     println("Using invalid array. Can't update");
                     IntVal(0);
                 }
-                ArrVal(val): 
-                {
-                    switch(index) 
-                    {
-                        ArrVal(arr_v): 
-                        {
+                ArrVal(val): {
+                    switch (index) {
+                        ArrVal(arr_v): {
                             println("Using invalid array. Can't update");
                             IntVal(0);
                         }
-                        IntVal(int_v): 
-                        {
-                            if (length(array.val) < index.val) 
-                            {
+                        IntVal(int_v): {
+                            if (length(array.val) < index.val) {
                                 arr = arrayResize(array.val, index.val + 1, IntVal(0));
                                 ArrVal(replace(arr, index.val, value));
-                            } 
-                            else 
-                            {
+                            } else {
                                 ArrVal(replace(array.val, index.val, value));
                             }
                         }
                     }
                 }
             }
-            
         }
-        Add(l, r):
-        {
+        Add(l, r): {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
-            switch(left)
-            {
-                ArrVal(l_val): 
-                {
+            switch (left) {
+                ArrVal(l_val): {
                     println("Can't use arithmetics. There is an error");
                     IntVal(0);
                 }
-                IntVal(l_val):
-                {
-                     switch(right) 
-                     {
-                        ArrVal(r_val): 
-                        {
+                IntVal(l_val): {
+                    switch (right) {
+                        ArrVal(r_val): {
                             println("Can't use arithmetics. There is an error");
                             IntVal(0);
                         }
-                        IntVal(r_val): 
-                        {
+                        IntVal(r_val): {
                             IntVal(l_val + r_val);
                         }
-                     }
+                    }
                 }
             }
         }
-        Mul(l, r):
-        {
+        Mul(l, r): {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
-            switch(left)
-            {
-                ArrVal(l_val): 
-                {
+            switch (left) {
+                ArrVal(l_val): {
                     println("Can't use arithmetics. There is an error");
                     IntVal(0);
                 }
-                IntVal(l_val):
-                {
-                     switch(right) 
-                     {
-                        ArrVal(r_val): 
-                        {
+                IntVal(l_val): {
+                    switch (right) {
+                        ArrVal(r_val): {
                             println("Can't use arithmetics. There is an error");
                             IntVal(0);
                         }
-                        IntVal(r_val): 
-                        {
+                        IntVal(r_val): {
                             IntVal(l_val * r_val);
                         }
-                     }
+                    }
                 }
             }
         }
-        Div(l, r):
-        {
+        Div(l, r): {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
-            switch(left)
-            {
-                ArrVal(l_val): 
-                {
+            switch (left) {
+                ArrVal(l_val): {
                     println("Can't use arithmetics. There is an error");
                     IntVal(0);
                 }
-                IntVal(l_val):
-                {
-                     switch(right) 
-                     {
-                        ArrVal(r_val): 
-                        {
+                IntVal(l_val): {
+                    switch (right) {
+                        ArrVal(r_val): {
                             println("Can't use arithmetics. There is an error");
                             IntVal(0);
                         }
-                        IntVal(r_val): 
-                        {
+                        IntVal(r_val): {
                             IntVal(l_val / r_val);
                         }
-                     }
+                    }
                 }
             }
         }
-        Sub(l, r):
-        {
+        Sub(l, r): {
             left = calculate(l, vars);
             right = calculate(r, vars);
 
-            switch(left)
-            {
-                ArrVal(l_val): 
-                {
+            switch (left) {
+                ArrVal(l_val): {
                     println("Can't use arithmetics. There is an error");
                     IntVal(0);
                 }
-                IntVal(l_val):
-                {
-                     switch(right) 
-                     {
-                        ArrVal(r_val): 
-                        {
+                IntVal(l_val): {
+                    switch (right) {
+                        ArrVal(r_val): {
                             println("Can't use arithmetics. There is an error");
                             IntVal(0);
                         }
-                        IntVal(r_val): 
-                        {
+                        IntVal(r_val): {
                             IntVal(l_val - r_val);
                         }
-                     }
+                    }
                 }
             }
         }
-        
     }
 }

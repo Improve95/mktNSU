@@ -4,36 +4,27 @@ export {
     checkProgram(prog: Program) -> bool;
 }
 
-checkProgram(prog: Program) -> bool
-{
+checkProgram(prog: Program) -> bool {
     decl = checkDecl(prog.def_vars);
-    switch(decl)
-    {
+    switch(decl) {
         None(): false;
-        Some(dec):
-        {
+        Some(dec): {
             checkBody(prog.body, dec);
         }
     }
 }
 
-checkDecl(defs: [DefVar]) -> Maybe<Tree>
-{
+checkDecl(defs: [DefVar]) -> Maybe<Tree> {
     fold(defs, Some(makeTree()), \vars, def -> {
-        switch (vars) 
-        {
-            None() : None();
-            Some(tree): 
-            { 
+        switch (vars) {
+            None(): None();
+            Some(tree): { 
                 var = lookupTree(tree, def.name);
-                switch(var)
-                {
-                    None():
-                    {
+                switch(var) {
+                    None(): {
                         maybeMap(vars, \t -> setTree(t, def.name, def.type));   
                     }
-                    Some(v):
-                    {
+                    Some(v): {
                         println("Do not redeclare: " + def.name);
                         None();
                     }
@@ -43,42 +34,32 @@ checkDecl(defs: [DefVar]) -> Maybe<Tree>
     }); 
 }
 
-checkBody(body: Body, declared_vars: Tree<string, Type>) -> bool
-{
-    switch(body)
-    {
-        Assignment(var, ex):
-        {
+checkBody(body: Body, declared_vars: Tree<string, Type>) -> bool {
+    switch(body) {
+        Assignment(var, ex): {
             mvar = lookupTree(declared_vars, var);
-            switch (mvar) 
-            {
-                None(): 
-                {
-                    println("Assigning to the not declared veriable");
+            switch (mvar) {
+                None(): {
+                    println("Assigning to the not declared variable");
                     false;
                 }
-                Some(v):
-                {
+                Some(v): {
                     checkExpression(ex, declared_vars); // + check types
                 }
             }
         }
-        Test(be):
-        {
+        Test(be): {
             checkCond(be, declared_vars);
         }
-        Iter(b):
-        {
+        Iter(b): {
             checkBody(b, declared_vars);
         }
-        Next(b):
-        {
+        Next(b): {
             fold(b, true, \correct, next -> {
                 correct && checkBody(next, declared_vars);
             });
         }
-        Select(s):
-        {
+        Select(s): {
             fold(s, true, \correct, st -> {
                 correct && checkBody(st, declared_vars);
             });
@@ -87,50 +68,38 @@ checkBody(body: Body, declared_vars: Tree<string, Type>) -> bool
 }
 
 //Exp ::= Add, Sub, Mul, Div, Var, Int, APP, UPD;
-checkExpression(exp: Exp, declared_vars: Tree<string, Type>) -> bool
-{
-    switch(exp)
-    {
-        APP(arr, index):
-        {
+checkExpression(exp: Exp, declared_vars: Tree<string, Type>) -> bool {
+    switch(exp) {
+        APP(arr, index): {
             // index can be an expression :)
             firstCheck = checkExpression(arr, declared_vars) && checkExpression(index, declared_vars);
 
             secondCheck = isArrayType(getType(arr, declared_vars));
-            if(!secondCheck)
-            {
+            if(!secondCheck) {
                 println("Using not valid array in APP");
             } 
 
             thirdCheck = areTypesEqual(getType(index, declared_vars), INT());
-            if(!thirdCheck)
-            {
+            if(!thirdCheck) {
                 println("Using not valid index in APP");
             }
 
             firstCheck && secondCheck && thirdCheck;
         }
-        UPD(arr, index, val):
-        {
+        UPD(arr, index, val): {
             firstCheck = checkExpression(arr, declared_vars) && checkExpression(index, declared_vars) && checkExpression(val, declared_vars);
 
             secondCheck = getType(arr, declared_vars);
-            correctnes = switch(secondCheck)
-            {
-                INT():
-                {
+            correctnes = switch(secondCheck) {
+                INT(): {
                     println("Using not valid array in UPD");
                     false;
                 }
-                Array(t):
-                {
+                Array(t): {
                     value = areTypesEqual(t, getType(val, declared_vars));
-                    if(value)
-                    {
+                    if(value) {
                         true;
-                    }
-                    else
-                    {
+                    } else {
                         println("Value type do not match array type in UPD");
                         false;
                     }
@@ -138,96 +107,79 @@ checkExpression(exp: Exp, declared_vars: Tree<string, Type>) -> bool
             }
 
             thirdCheck = areTypesEqual(getType(index, declared_vars), INT());
-            if(!thirdCheck)
-            {
+            if(!thirdCheck) {
                 println("Using not valid index in APP");
             }
 
             firstCheck && correctnes && thirdCheck;
         }
-        Var(name):
-        {
+        Var(name): {
             var = lookupTree(declared_vars, name);
-            switch(var)
-            {
-                Some(v):
-                {
+            switch(var) {
+                Some(v): {
                     true;
                 }
-                None():
-                {
+                None(): {
                     println("Variable: " + name + "not declared");
                     false;
                 }
             }
         }
-        Add(left, right):
-        {
+        Add(left, right): {
             firstCheck = checkExpression(left, declared_vars) && checkExpression(right, declared_vars);
 
             leftInt = areTypesEqual(getType(left, declared_vars), INT());
-            if(!leftInt)
-            {
+            if(!leftInt) {
                 println("Left value of addition is not correct");
             }
 
             rightInt = areTypesEqual(getType(right, declared_vars), INT());
-            if(!rightInt)
-            {
+            if(!rightInt) {
                 println("Right value of addition is not correct");
             }
 
             firstCheck && leftInt && rightInt;
         }
-        Mul(left, right):
-        {
+        Mul(left, right): {
             firstCheck = checkExpression(left, declared_vars) && checkExpression(right, declared_vars);
 
             leftInt = areTypesEqual(getType(left, declared_vars), INT());
-            if(!leftInt)
-            {
+            if(!leftInt) {
                 println("Left value of mul is not correct");
             }
 
             rightInt = areTypesEqual(getType(right, declared_vars), INT());
-            if(!rightInt)
-            {
+            if(!rightInt) {
                 println("Right value of mul is not correct");
             }
 
             firstCheck && leftInt && rightInt;
         }
-        Div(left, right):
-        {
+        Div(left, right): {
             firstCheck = checkExpression(left, declared_vars) && checkExpression(right, declared_vars);
 
             leftInt = areTypesEqual(getType(left, declared_vars), INT());
-            if(!leftInt)
-            {
+            if(!leftInt) {
                 println("Left value of div is not correct");
             }
 
             rightInt = areTypesEqual(getType(right, declared_vars), INT());
-            if(!rightInt)
-            {
+            if(!rightInt) {
                 println("Right value of div is not correct");
             }
 
             firstCheck && leftInt && rightInt;
         }
-        Sub(left, right):
-        {  
+        Sub(left, right): {  
             firstCheck = checkExpression(left, declared_vars) && checkExpression(right, declared_vars);
 
             leftInt = areTypesEqual(getType(left, declared_vars), INT());
-            if(!leftInt)
-            {
+            if(!leftInt) {
                 println("Left value of sub is not correct");
             }
 
             rightInt = areTypesEqual(getType(right, declared_vars), INT());
-            if(!rightInt)
-            {
+            if(!rightInt) {
                 println("Right value of sub is not correct");
             }
 
@@ -237,31 +189,23 @@ checkExpression(exp: Exp, declared_vars: Tree<string, Type>) -> bool
     }
 }
 
-isArrayType(type: Type) -> bool
-{
-    switch (type) 
-    {
+isArrayType(type: Type) -> bool {
+    switch (type) {
         INT(): false;
         Array(a): true;
     }
 }
 
-areTypesEqual(type1: Type, type2: Type) -> bool
-{
-    switch(type1)
-    {
-        INT():
-        {
-            switch (type2) 
-            {
+areTypesEqual(type1: Type, type2: Type) -> bool {
+    switch(type1) {
+        INT(): {
+            switch (type2) {
                 INT(): true;
-                Array(a): false
+                Array(a): false;
             }
         }
-        Array(a):
-        {
-            switch (type2) 
-            {
+        Array(a): {
+            switch (type2) {
                 INT(): false;
                 Array(b): areTypesEqual(a, b);
             }
@@ -269,36 +213,28 @@ areTypesEqual(type1: Type, type2: Type) -> bool
     }
 }
 
-checkCond(cond: Condition, declared_vars: Tree<string, Type>) -> bool
-{
-    switch(cond)
-    {
-        LogicAnd(left, right):
-        {
+checkCond(cond: Condition, declared_vars: Tree<string, Type>) -> bool {
+    switch(cond) {
+        LogicAnd(left, right): {
             checkCond(left, declared_vars) && checkCond(right, declared_vars);
         }
-        LogicOr(left, right):
-        {
+        LogicOr(left, right): {
             checkCond(left, declared_vars) && checkCond(right, declared_vars);
         }
-        LogicNot(a):
-        {
+        LogicNot(a): {
             checkCond(a, declared_vars);
         }
-        Comparison(left, right, relation):
-        {
+        Comparison(left, right, relation): {
             firstCheck = checkExpression(left, declared_vars) && checkExpression(right, declared_vars);
 
             l = areTypesEqual(getType(left, declared_vars), INT());
-            if(!l)
-            {
-                println("There is an mistake in comparison");
+            if(!l) {
+                println("There is a mistake in comparison");
             }
 
             r = areTypesEqual(getType(right, declared_vars), INT());
-            if(!r)
-            {
-                println("There is an mistake in comparison");
+            if(!r) {
+                println("There is a mistake in comparison");
             }
 
             firstCheck && l && r;
@@ -306,51 +242,38 @@ checkCond(cond: Condition, declared_vars: Tree<string, Type>) -> bool
     }
 }
 
-getType(exp: Exp, declared_vars: Tree<string, Type>) -> Type
-{
-    switch (exp) 
-    {
-        Var(name):
-        {
+getType(exp: Exp, declared_vars: Tree<string, Type>) -> Type {
+    switch (exp) {
+        Var(name): {
             var_name = lookupTree(declared_vars, name);
-            switch(var_name)
-            {
-                Some(n): {n}
-                None(): 
-                {
+            switch(var_name) {
+                Some(n): {n;}
+                None(): {
                     println("Not declared variable: " + name);
                     INT();
                 }
             }
         }
-        APP(arr, index): // returns type of array elements
-        {
+        APP(arr, index): { // returns type of array elements
             type = getType(arr, declared_vars);
-            switch(type)
-            {
-                INT():
-                {
+            switch(type) {
+                INT(): {
                     println("Trying to APP to a non-array variable");
                     INT();
                 }
-                Array(typ):
-                {
+                Array(typ): {
                     typ; 
                 }
             }
         }
-        UPD(arr, index, val): // returns type of the array
-        {
+        UPD(arr, index, val): { // returns type of the array
             type = getType(arr, declared_vars);
-            switch(type)
-            {
-                INT():
-                {
+            switch(type) {
+                INT(): {
                     println("Trying to UPD a non-array variable");
                     INT();
                 }
-                Array(typ):
-                {
+                Array(typ): {
                     type;
                 }
             }
